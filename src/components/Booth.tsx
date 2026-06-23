@@ -54,7 +54,7 @@ function CustomPoster({
         position={[0, 0, args[2]/2]}
       >
         <boxGeometry args={args} />
-        <meshStandardMaterial color={texture ? "#ffffff" : bgColor} map={texture || null} roughness={0.9} />
+        <meshBasicMaterial color={texture ? "#ffffff" : bgColor} map={texture || null} />
       </mesh>
       {!texture && (
         <Text position={[0, 0, args[2] + 0.001]} fontSize={fontSize} color={textColor} letterSpacing={letterSpacing} font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf">
