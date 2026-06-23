@@ -74,6 +74,19 @@ function App() {
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
   
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  const showToast = (message: string) => {
+    setToastMessage(message);
+  };
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
   const [templateGallery, setTemplateGallery] = useState<Record<string, string[]>>({});
   const [activeGalleryTab, setActiveGalleryTab] = useState<string>('');
   const [isTemplateSettingsOpen, setIsTemplateSettingsOpen] = useState(false);
@@ -165,6 +178,43 @@ function App() {
         if (parsed.showcaseRotation !== undefined) setShowcaseRotation(parsed.showcaseRotation);
       } catch (e) {
         console.warn("Failed to load active showcase settings", e);
+      }
+    }
+
+    // Read state from URL query parameters on load
+    const params = new URLSearchParams(window.location.search);
+    const stateParam = params.get('state');
+    if (stateParam) {
+      try {
+        const decoded = decodeURIComponent(escape(atob(stateParam)));
+        const state = JSON.parse(decoded);
+        if (state) {
+          if (state.images) setPosterImages(state.images);
+          if (state.posterCount !== undefined) setPosterCount(state.posterCount);
+          if (state.signPattern !== undefined) setSignPattern(state.signPattern);
+          if (state.showSignboard !== undefined) setShowSignboard(state.showSignboard);
+          if (state.signboardX !== undefined) setSignboardX(state.signboardX);
+          if (state.signboardZ !== undefined) setSignboardZ(state.signboardZ);
+          if (state.signboardRotation !== undefined) setSignboardRotation(state.signboardRotation);
+          if (state.leftPanelPattern !== undefined) setLeftPanelPattern(state.leftPanelPattern);
+          if (state.iceMachineX !== undefined) setIceMachineX(state.iceMachineX);
+          if (state.iceMachineZ !== undefined) setIceMachineZ(state.iceMachineZ);
+          if (state.iceMachineRotation !== undefined) setIceMachineRotation(state.iceMachineRotation);
+          if (state.showcaseX !== undefined) setShowcaseX(state.showcaseX);
+          if (state.showcaseZ !== undefined) setShowcaseZ(state.showcaseZ);
+          if (state.showcaseRotation !== undefined) setShowcaseRotation(state.showcaseRotation);
+          if (state.leftFrontPanelPattern !== undefined) setLeftFrontPanelPattern(state.leftFrontPanelPattern);
+          
+          setTimeout(() => {
+            showToast("共有されたレイアウトを読み込みました！");
+          }, 500);
+
+          // Clear URL parameter
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
+      } catch (e) {
+        console.error("Failed to parse shared state from URL", e);
       }
     }
   }, []);
@@ -269,6 +319,40 @@ function App() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (layoutPresets.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const presetParam = params.get('preset');
+      if (presetParam) {
+        const preset = layoutPresets.find(p => p.id === presetParam);
+        if (preset) {
+          setSelectedPresetId(presetParam);
+          setPosterImages(preset.images);
+          setPosterCount(preset.posterCount || 4);
+          setSignPattern(preset.signPattern || 'banner');
+          setShowSignboard(preset.showSignboard !== undefined ? preset.showSignboard : true);
+          setSignboardX(preset.signboardX !== undefined ? preset.signboardX : 1.2);
+          setSignboardZ(preset.signboardZ !== undefined ? preset.signboardZ : -0.6);
+          setSignboardRotation(preset.signboardRotation !== undefined ? preset.signboardRotation : 45);
+          setLeftPanelPattern(preset.leftPanelPattern || 'corkboard');
+          setIceMachineX(preset.iceMachineX !== undefined ? preset.iceMachineX : 0.925);
+          setIceMachineZ(preset.iceMachineZ !== undefined ? preset.iceMachineZ : -2.0);
+          setIceMachineRotation(preset.iceMachineRotation !== undefined ? preset.iceMachineRotation : -90);
+          setShowcaseX(preset.showcaseX !== undefined ? preset.showcaseX : -0.975);
+          setShowcaseZ(preset.showcaseZ !== undefined ? preset.showcaseZ : -2.1);
+          setShowcaseRotation(preset.showcaseRotation !== undefined ? preset.showcaseRotation : -90);
+          setLeftFrontPanelPattern(preset.leftFrontPanelPattern || 'a1');
+          
+          showToast(`テンプレート「${preset.name}」を読み込みました！`);
+          
+          // Clear URL parameter
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
+      }
+    }
+  }, [layoutPresets]);
+
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
     setActiveGalleryTab(selectedPresetId);
@@ -290,6 +374,51 @@ function App() {
       });
     }
     setActivePosterId(null);
+  };
+  const handleShare = () => {
+    try {
+      const state = {
+        images: posterImages,
+        posterCount,
+        signPattern,
+        showSignboard,
+        signboardX,
+        signboardZ,
+        signboardRotation,
+        leftPanelPattern,
+        iceMachineX,
+        iceMachineZ,
+        iceMachineRotation,
+        showcaseX,
+        showcaseZ,
+        showcaseRotation,
+        leftFrontPanelPattern
+      };
+      
+      const jsonStr = JSON.stringify(state);
+      const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+      const shareUrl = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
+      
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showToast("共有リンクをクリップボードにコピーしました！");
+      }).catch((err) => {
+        console.error("Failed to copy link via navigator.clipboard", err);
+        const textArea = document.createElement("textarea");
+        textArea.value = shareUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showToast("共有リンクをコピーしました！");
+        } catch (e) {
+          alert(`リンクのコピーに失敗しました。以下のURLをコピーしてください：\n${shareUrl}`);
+        }
+        document.body.removeChild(textArea);
+      });
+    } catch (e) {
+      console.error("Failed to generate share URL", e);
+      showToast("共有リンクの生成に失敗しました");
+    }
   };
 
   return (
@@ -507,6 +636,15 @@ function App() {
             </div>
           </div>
           
+          <button 
+            onClick={handleShare}
+            className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm active:scale-95 cursor-pointer"
+            title="共有リンクをコピー"
+          >
+            <span className="material-symbols-outlined text-[18px]">share</span>
+            <span>共有</span>
+          </button>
+
           <div className="relative">
             <button 
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -1084,6 +1222,13 @@ function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      
+      {toastMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm text-white px-5 py-3 rounded-full text-sm font-semibold shadow-xl z-[9999] flex items-center gap-2 transition-all">
+          <span className="material-symbols-outlined text-[18px] text-green-400">check_circle</span>
+          <span>{toastMessage}</span>
         </div>
       )}
     </div>
