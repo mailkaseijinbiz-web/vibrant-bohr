@@ -24,6 +24,35 @@ const colors = {
   punchedMetal: "#ffffff"
 };
 
+function CustomPoster({ position, rotation, args, imageUrl, onClick, text }: { position: [number, number, number], rotation?: [number, number, number], args: [number, number, number], imageUrl?: string, onClick?: (e: any) => void, text: string }) {
+  const texture = useMemo(() => {
+    if (!imageUrl) return null;
+    const loader = new THREE.TextureLoader();
+    return loader.load(imageUrl);
+  }, [imageUrl]);
+
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh onClick={onClick} position={[0, 0, args[2]/2]}>
+        <boxGeometry args={args} />
+        <meshStandardMaterial color={texture ? "#ffffff" : "#d4d4d4"} map={texture || null} roughness={0.9} />
+      </mesh>
+      {!texture && (
+        <Text position={[0, 0, args[2] + 0.001]} fontSize={0.15} color="#ffffff" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf" pointerEvents="none">
+          {text}
+        </Text>
+      )}
+    </group>
+  );
+}
+
+interface BoothProps {
+  showDimensions?: boolean;
+  posterImages?: Record<string, string>;
+  onPosterClick?: (id: string) => void;
+}
+
+export function Booth({ showDimensions = false, posterImages = {}, onPosterClick }: BoothProps) {
 const rightCounterX = dimensions.totalWidth / 2 - dimensions.rightCounterWidth / 2;
 const leftCounterX = -dimensions.totalWidth / 2 + dimensions.leftCounterWidth / 2;
 
@@ -406,26 +435,22 @@ export function Booth({ showDimensions = false }: { showDimensions?: boolean }) 
       {/* Posters on the Left Base (A1, A1, Corkboard) */}
       <group position={[leftPoleX - 0.002, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
         {/* Left A1 */}
-        <group position={[-0.65, 0, 0]}>
-          <mesh position={[0, 0, 0.001]}>
-            <boxGeometry args={[0.594, 0.841, 0.002]} />
-            <meshStandardMaterial color="#d4d4d4" roughness={0.9} />
-          </mesh>
-          <Text position={[0, 0, 0.003]} fontSize={0.15} color="#ffffff" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf">
-            A1
-          </Text>
-        </group>
+        <CustomPoster 
+          position={[-0.65, 0, 0]} 
+          args={[0.594, 0.841, 0.002]} 
+          imageUrl={posterImages['a1-left']}
+          onClick={(e) => { e.stopPropagation(); onPosterClick?.('a1-left'); }}
+          text="A1"
+        />
         
         {/* Middle A1 */}
-        <group position={[0, 0, 0]}>
-          <mesh position={[0, 0, 0.001]}>
-            <boxGeometry args={[0.594, 0.841, 0.002]} />
-            <meshStandardMaterial color="#d4d4d4" roughness={0.9} />
-          </mesh>
-          <Text position={[0, 0, 0.003]} fontSize={0.15} color="#ffffff" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf">
-            A1
-          </Text>
-        </group>
+        <CustomPoster 
+          position={[0, 0, 0]} 
+          args={[0.594, 0.841, 0.002]} 
+          imageUrl={posterImages['a1-middle']}
+          onClick={(e) => { e.stopPropagation(); onPosterClick?.('a1-middle'); }}
+          text="A1"
+        />
         
         {/* Right Corkboard */}
         <group position={[0.65, 0, 0]}>
@@ -519,17 +544,16 @@ export function Booth({ showDimensions = false }: { showDimensions?: boolean }) 
           const posterW = 0.42;
           const posterH = 0.594;
           const gap = 0.03; // 3cm gap between posters
+          const id = `a2-${i}`;
           return (
-            <group key={i} position={[i * (posterW + gap), 0, 0]}>
-              <mesh>
-                <planeGeometry args={[posterW * 0.98, posterH * 0.98]} />
-                <meshStandardMaterial color="#ffffff" roughness={0.8} side={THREE.DoubleSide} />
-              </mesh>
-              <mesh position={[0, 0, -0.001]}>
-                <planeGeometry args={[posterW, posterH]} />
-                <meshStandardMaterial color="#dddddd" roughness={0.9} side={THREE.DoubleSide} />
-              </mesh>
-            </group>
+            <CustomPoster 
+              key={id}
+              position={[i * (posterW + gap), 0, 0]} 
+              args={[posterW, posterH, 0.002]} 
+              imageUrl={posterImages[id]}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.(id); }}
+              text="A2"
+            />
           );
         })}
       </group>

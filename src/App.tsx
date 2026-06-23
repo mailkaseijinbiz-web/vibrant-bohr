@@ -1,10 +1,27 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { Booth } from './components/Booth'
 
 function App() {
   const [showDimensions, setShowDimensions] = useState(false);
+  const [posterImages, setPosterImages] = useState<Record<string, string>>({});
+  const [activePosterId, setActivePosterId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePosterClick = (id: string) => {
+    setActivePosterId(id);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && activePosterId) {
+      const url = URL.createObjectURL(file);
+      setPosterImages(prev => ({ ...prev, [activePosterId]: url }));
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   return (
     <div className="w-full h-screen bg-gray-100 flex flex-col items-center">
@@ -34,7 +51,11 @@ function App() {
           
           {/* Scene */}
           <group position={[0, -1, 1]}>
-            <Booth showDimensions={showDimensions} />
+            <Booth 
+              showDimensions={showDimensions} 
+              posterImages={posterImages}
+              onPosterClick={handlePosterClick}
+            />
             
             {/* Ground / Shadows */}
             <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={10} blur={2} far={4} />
@@ -49,6 +70,15 @@ function App() {
           <Environment preset="city" />
         </Canvas>
       </main>
+
+      {/* Hidden file input for poster uploads */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={handleFileUpload} 
+      />
     </div>
   )
 }
