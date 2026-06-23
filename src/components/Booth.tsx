@@ -580,7 +580,7 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
       <CustomPoster 
         position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.20, -dimensions.totalDepth / 2]}
         rotation={[0, -Math.PI / 2, 0]}
-        args={[2.2, 0.35, 0.02]}
+        args={[1.77, 0.35, 0.02]}
         imageUrl={posterImages['logo']}
         onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
         text="LOGO"
