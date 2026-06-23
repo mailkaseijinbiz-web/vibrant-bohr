@@ -48,6 +48,7 @@ function App() {
   const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
   const [posterCount, setPosterCount] = useState<4 | 5>(4);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
@@ -278,36 +279,66 @@ function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200">
-            <span className="text-sm text-gray-600 font-medium whitespace-nowrap hidden sm:inline">ポスター配置:</span>
-            <select 
-              value={posterCount}
-              onChange={(e) => setPosterCount(Number(e.target.value) as 4 | 5)}
-              className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer"
+          <div className="relative">
+            <button 
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="flex items-center justify-center p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-white"
+              title="設定"
             >
-              <option value={4}>A2 4枚</option>
-              <option value={5}>A2 5枚</option>
-            </select>
-          </div>
+              <span className="material-symbols-outlined text-[24px]">settings</span>
+            </button>
+            
+            {isSettingsOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-20" 
+                  onClick={() => setIsSettingsOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex flex-col gap-4 z-30">
+                  {/* 1. ポスター配置 */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-gray-500">ポスター配置</span>
+                    <select 
+                      value={posterCount}
+                      onChange={(e) => setPosterCount(Number(e.target.value) as 4 | 5)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm text-gray-700 outline-none cursor-pointer hover:bg-gray-100 transition-colors"
+                    >
+                      <option value={4}>A2 4枚</option>
+                      <option value={5}>A2 5枚</option>
+                    </select>
+                  </div>
 
-          <button 
-            onClick={() => {
-              setActiveGalleryTab(selectedPresetId);
-              setIsTemplateSettingsOpen(true);
-            }}
-            className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200 text-purple-700 font-medium hover:bg-purple-100 transition-colors text-sm sm:text-base whitespace-nowrap"
-          >
-            画像一覧
-          </button>
-          <label className="flex items-center gap-2 cursor-pointer bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 text-blue-700 font-medium hover:bg-blue-100 transition-colors text-sm sm:text-base">
-            <input 
-              type="checkbox" 
-              checked={showDimensions} 
-              onChange={(e) => setShowDimensions(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-            />
-            寸法表示
-          </label>
+                  {/* 2. 画像一覧 */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-gray-500">画像管理</span>
+                    <button 
+                      onClick={() => {
+                        setActiveGalleryTab(selectedPresetId);
+                        setIsTemplateSettingsOpen(true);
+                        setIsSettingsOpen(false);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg py-1.5 text-sm font-medium transition-colors"
+                    >
+                      画像一覧
+                    </button>
+                  </div>
+
+                  {/* 3. 寸法表示 */}
+                  <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+                      <input 
+                        type="checkbox" 
+                        checked={showDimensions} 
+                        onChange={(e) => setShowDimensions(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      <span>寸法を表示する</span>
+                    </label>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
