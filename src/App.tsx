@@ -5,7 +5,14 @@ import { Booth } from './components/Booth'
 
 function App() {
   const [showDimensions, setShowDimensions] = useState(false);
-  const [posterImages, setPosterImages] = useState<Record<string, string>>({});
+  const [posterImages, setPosterImages] = useState<Record<string, string>>({
+    'a2--1.5': '/posters/poster_takoyaki_1782184842429.png',
+    'a2--0.5': '/posters/poster_negidako_1782184913396.png',
+    'a2-0.5': '/posters/poster_mentai_1782184922839.png',
+    'a2-1.5': '/posters/poster_takosen_1782184868897.png',
+    'a1-left': '/posters/poster_drinks_1782184880492.png',
+    'a1-middle': '/posters/poster_kakigori_1782184890220.png',
+  });
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
 
   const handlePosterClick = (id: string) => {
