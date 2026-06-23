@@ -50,52 +50,87 @@ function App() {
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
   
-  const [templateGallery, setTemplateGallery] = useState<string[]>(() => {
-    const saved = localStorage.getItem('vibrant-bohr-gallery');
-    if (saved) return JSON.parse(saved);
-    return generatedTemplates;
-  });
+  const [templateGallery, setTemplateGallery] = useState<string[]>([]);
   const [isTemplateSettingsOpen, setIsTemplateSettingsOpen] = useState(false);
-
-  const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>(() => {
-    const saved = localStorage.getItem('vibrant-bohr-presets');
-    if (saved) return JSON.parse(saved);
-    return [
-      {
-        id: 'default',
-        name: 'たこ焼き屋台セット',
-        images: {
-          'a2--1.5': '/posters/poster_takoyaki_1782184842429.png',
-          'a2--0.5': '/posters/poster_negidako_1782184913396.png',
-          'a2-0.5': '/posters/poster_mentai_1782184922839.png',
-          'a2-1.5': '/posters/poster_takosen_1782184868897.png',
-          'a1-left': '/posters/poster_drinks_1782184880492.png',
-          'a1-middle': '/posters/poster_kakigori_1782184890220.png',
-        }
-      }
-    ];
-  });
+  const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
 
   useEffect(() => {
-    try {
-      localStorage.setItem('vibrant-bohr-presets', JSON.stringify(layoutPresets));
-    } catch (e) {
-      console.warn("Storage quota exceeded for presets");
-    }
-  }, [layoutPresets]);
+    const loadData = async () => {
+      try {
+        const [presetsRes, galleryRes] = await Promise.all([
+          fetch('/api/presets').catch(() => ({ ok: false, json: () => [] })),
+          fetch('/api/gallery').catch(() => ({ ok: false, json: () => [] }))
+        ]);
 
-  useEffect(() => {
+        if (presetsRes.ok) {
+          const data = await presetsRes.json();
+          if (data && data.length > 0) setLayoutPresets(data);
+        } else {
+          throw new Error("Presets API failed");
+        }
+
+        if (galleryRes.ok) {
+          const data = await galleryRes.json();
+          if (data && data.length > 0) setTemplateGallery(data);
+        } else {
+          throw new Error("Gallery API failed");
+        }
+      } catch (err) {
+        console.log("Fallback to localStorage");
+        const savedPresets = localStorage.getItem('vibrant-bohr-presets');
+        if (savedPresets) setLayoutPresets(JSON.parse(savedPresets));
+        else setLayoutPresets([{
+          id: 'default',
+          name: 'たこ焼き屋台セット',
+          images: {
+            'a2--1.5': '/posters/poster_takoyaki_1782184842429.png',
+            'a2--0.5': '/posters/poster_negidako_1782184913396.png',
+            'a2-0.5': '/posters/poster_mentai_1782184922839.png',
+            'a2-1.5': '/posters/poster_takosen_1782184868897.png',
+            'a1-left': '/posters/poster_drinks_1782184880492.png',
+            'a1-middle': '/posters/poster_kakigori_1782184890220.png',
+          }
+        }]);
+
+        const savedGallery = localStorage.getItem('vibrant-bohr-gallery');
+        if (savedGallery) setTemplateGallery(JSON.parse(savedGallery));
+        else setTemplateGallery(generatedTemplates);
+      }
+    };
+    loadData();
+  }, []);
+
+  const savePresets = async (newPresets: LayoutPreset[]) => {
+    setLayoutPresets(newPresets);
     try {
-      localStorage.setItem('vibrant-bohr-gallery', JSON.stringify(templateGallery));
+      localStorage.setItem('vibrant-bohr-presets', JSON.stringify(newPresets));
+      await fetch('/api/presets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPresets)
+      });
     } catch (e) {
-      console.warn("Storage quota exceeded for gallery");
+      console.warn("Failed to save presets to server", e);
     }
-  }, [templateGallery]);
+  };
+
+  const saveGallery = async (newGallery: string[]) => {
+    setTemplateGallery(newGallery);
+    try {
+      localStorage.setItem('vibrant-bohr-gallery', JSON.stringify(newGallery));
+      await fetch('/api/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newGallery)
+      });
+    } catch (e) {
+      console.warn("Failed to save gallery to server", e);
+    }
+  };
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
-    // Removed programmatic click to support mobile Safari which blocks it.
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +138,7 @@ function App() {
     if (file && activePosterId) {
       resizeAndBase64(file, (base64) => {
         setPosterImages(prev => ({ ...prev, [activePosterId]: base64 }));
-        setTemplateGallery(prev => prev.includes(base64) ? prev : [...prev, base64]);
+        saveGallery(templateGallery.includes(base64) ? templateGallery : [...templateGallery, base64]);
       });
     }
     setActivePosterId(null);
@@ -139,7 +174,7 @@ function App() {
                 const name = prompt("テンプレート名を入力してください", `設定 ${layoutPresets.length}`);
                 if (name) {
                   const newPreset = { id: Date.now().toString(), name, images: { ...posterImages } };
-                  setLayoutPresets(prev => [...prev, newPreset]);
+                  savePresets([...layoutPresets, newPreset]);
                   setSelectedPresetId(newPreset.id);
                 }
               }}
@@ -167,7 +202,7 @@ function App() {
       </header>
 
       <main className="flex-1 w-full relative">
-        <Canvas camera={{ position: [3, 2, 4], fov: 45 }}>
+        <Canvas camera={{ position: [-5, 2, -1], fov: 45 }}>
           {/* Lighting */}
           <ambientLight intensity={0.5} />
           <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
@@ -271,7 +306,7 @@ function App() {
                 <div key={idx} className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50 group">
                   <img src={templateUrl} alt="template" className="w-full h-full object-cover" />
                   <button 
-                    onClick={() => setTemplateGallery(prev => prev.filter((_, i) => i !== idx))}
+                    onClick={() => saveGallery(templateGallery.filter((_, i) => i !== idx))}
                     className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
                   >
                     ✕
@@ -291,7 +326,7 @@ function App() {
                     const file = e.target.files?.[0];
                     if (file) {
                       resizeAndBase64(file, (base64) => {
-                        setTemplateGallery(prev => prev.includes(base64) ? prev : [...prev, base64]);
+                        saveGallery(templateGallery.includes(base64) ? templateGallery : [...templateGallery, base64]);
                       });
                     }
                   }} 
