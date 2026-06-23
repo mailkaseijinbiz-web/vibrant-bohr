@@ -876,9 +876,9 @@ export function Booth({
       {/* Top Banner (LOGO) */}
       {signPattern === 'banner' && (
         <CustomPoster 
-          position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.20, -dimensions.totalDepth / 2]}
+          position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.325, -dimensions.totalDepth / 2]}
           rotation={[0, -Math.PI / 2, 0]}
-          args={[posterCount === 5 ? 2.22 : 1.77, 0.35, 0.02]}
+          args={[1.8, 0.6, 0.02]}
           imageUrl={posterImages['logo']}
           onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
           text="LOGO"
