@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { Booth } from './components/Booth'
@@ -18,27 +18,80 @@ type LayoutPreset = {
   images: Record<string, string>;
 };
 
+const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxDim = 800;
+      let width = img.width;
+      let height = img.height;
+      if (width > height && width > maxDim) {
+        height *= maxDim / width;
+        width = maxDim;
+      } else if (height > maxDim) {
+        width *= maxDim / height;
+        height = maxDim;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0, width, height);
+      callback(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = event.target?.result as string;
+  };
+  reader.readAsDataURL(file);
+};
+
 function App() {
   const [showDimensions, setShowDimensions] = useState(false);
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
-  const [templateGallery, setTemplateGallery] = useState<string[]>(generatedTemplates);
+  
+  const [templateGallery, setTemplateGallery] = useState<string[]>(() => {
+    const saved = localStorage.getItem('vibrant-bohr-gallery');
+    if (saved) return JSON.parse(saved);
+    return generatedTemplates;
+  });
   const [isTemplateSettingsOpen, setIsTemplateSettingsOpen] = useState(false);
-  const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>([
-    {
-      id: 'default',
-      name: 'たこ焼き屋台セット',
-      images: {
-        'a2--1.5': '/posters/poster_takoyaki_1782184842429.png',
-        'a2--0.5': '/posters/poster_negidako_1782184913396.png',
-        'a2-0.5': '/posters/poster_mentai_1782184922839.png',
-        'a2-1.5': '/posters/poster_takosen_1782184868897.png',
-        'a1-left': '/posters/poster_drinks_1782184880492.png',
-        'a1-middle': '/posters/poster_kakigori_1782184890220.png',
+
+  const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>(() => {
+    const saved = localStorage.getItem('vibrant-bohr-presets');
+    if (saved) return JSON.parse(saved);
+    return [
+      {
+        id: 'default',
+        name: 'たこ焼き屋台セット',
+        images: {
+          'a2--1.5': '/posters/poster_takoyaki_1782184842429.png',
+          'a2--0.5': '/posters/poster_negidako_1782184913396.png',
+          'a2-0.5': '/posters/poster_mentai_1782184922839.png',
+          'a2-1.5': '/posters/poster_takosen_1782184868897.png',
+          'a1-left': '/posters/poster_drinks_1782184880492.png',
+          'a1-middle': '/posters/poster_kakigori_1782184890220.png',
+        }
       }
-    }
-  ]);
+    ];
+  });
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('vibrant-bohr-presets', JSON.stringify(layoutPresets));
+    } catch (e) {
+      console.warn("Storage quota exceeded for presets");
+    }
+  }, [layoutPresets]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('vibrant-bohr-gallery', JSON.stringify(templateGallery));
+    } catch (e) {
+      console.warn("Storage quota exceeded for gallery");
+    }
+  }, [templateGallery]);
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
@@ -48,9 +101,10 @@ function App() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && activePosterId) {
-      const url = URL.createObjectURL(file);
-      setPosterImages(prev => ({ ...prev, [activePosterId]: url }));
-      setTemplateGallery(prev => [...prev, url]);
+      resizeAndBase64(file, (base64) => {
+        setPosterImages(prev => ({ ...prev, [activePosterId]: base64 }));
+        setTemplateGallery(prev => prev.includes(base64) ? prev : [...prev, base64]);
+      });
     }
     setActivePosterId(null);
   };
@@ -236,8 +290,9 @@ function App() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const url = URL.createObjectURL(file);
-                      setTemplateGallery(prev => [...prev, url]);
+                      resizeAndBase64(file, (base64) => {
+                        setTemplateGallery(prev => prev.includes(base64) ? prev : [...prev, base64]);
+                      });
                     }
                   }} 
                 />
