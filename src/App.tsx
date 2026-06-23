@@ -14,6 +14,12 @@ type LayoutPreset = {
   signboardZ?: number;
   signboardRotation?: number;
   leftPanelPattern?: 'corkboard' | 'poster';
+  iceMachineX?: number;
+  iceMachineZ?: number;
+  iceMachineRotation?: number;
+  showcaseX?: number;
+  showcaseZ?: number;
+  showcaseRotation?: number;
 };
 
 const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
@@ -61,6 +67,12 @@ function App() {
   const [signboardZ, setSignboardZ] = useState<number>(-0.6);
   const [signboardRotation, setSignboardRotation] = useState<number>(45);
   const [leftPanelPattern, setLeftPanelPattern] = useState<'corkboard' | 'poster'>('corkboard');
+  const [iceMachineX, setIceMachineX] = useState<number>(0.925);
+  const [iceMachineZ, setIceMachineZ] = useState<number>(-2.0);
+  const [iceMachineRotation, setIceMachineRotation] = useState<number>(-90);
+  const [showcaseX, setShowcaseX] = useState<number>(-0.975);
+  const [showcaseZ, setShowcaseZ] = useState<number>(-2.1);
+  const [showcaseRotation, setShowcaseRotation] = useState<number>(-90);
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
@@ -108,6 +120,28 @@ function App() {
     if (savedLeftPanel === 'poster' || savedLeftPanel === 'corkboard') {
       setLeftPanelPattern(savedLeftPanel);
     }
+    const savedIceMachine = localStorage.getItem('vibrant-bohr-active-ice-machine');
+    if (savedIceMachine) {
+      try {
+        const parsed = JSON.parse(savedIceMachine);
+        if (parsed.iceMachineX !== undefined) setIceMachineX(parsed.iceMachineX);
+        if (parsed.iceMachineZ !== undefined) setIceMachineZ(parsed.iceMachineZ);
+        if (parsed.iceMachineRotation !== undefined) setIceMachineRotation(parsed.iceMachineRotation);
+      } catch (e) {
+        console.warn("Failed to load active ice machine settings", e);
+      }
+    }
+    const savedShowcase = localStorage.getItem('vibrant-bohr-active-showcase');
+    if (savedShowcase) {
+      try {
+        const parsed = JSON.parse(savedShowcase);
+        if (parsed.showcaseX !== undefined) setShowcaseX(parsed.showcaseX);
+        if (parsed.showcaseZ !== undefined) setShowcaseZ(parsed.showcaseZ);
+        if (parsed.showcaseRotation !== undefined) setShowcaseRotation(parsed.showcaseRotation);
+      } catch (e) {
+        console.warn("Failed to load active showcase settings", e);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -120,8 +154,18 @@ function App() {
         signboardRotation
       }));
       localStorage.setItem('vibrant-bohr-active-left-panel-pattern', leftPanelPattern);
+      localStorage.setItem('vibrant-bohr-active-ice-machine', JSON.stringify({
+        iceMachineX,
+        iceMachineZ,
+        iceMachineRotation
+      }));
+      localStorage.setItem('vibrant-bohr-active-showcase', JSON.stringify({
+        showcaseX,
+        showcaseZ,
+        showcaseRotation
+      }));
     }
-  }, [showSignboard, signboardX, signboardZ, signboardRotation, leftPanelPattern, selectedPresetId]);
+  }, [showSignboard, signboardX, signboardZ, signboardRotation, leftPanelPattern, iceMachineX, iceMachineZ, iceMachineRotation, showcaseX, showcaseZ, showcaseRotation, selectedPresetId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -242,6 +286,12 @@ function App() {
                     setSignboardZ(preset.signboardZ !== undefined ? preset.signboardZ : -0.6);
                     setSignboardRotation(preset.signboardRotation !== undefined ? preset.signboardRotation : 45);
                     setLeftPanelPattern(preset.leftPanelPattern || 'corkboard');
+                    setIceMachineX(preset.iceMachineX !== undefined ? preset.iceMachineX : 0.925);
+                    setIceMachineZ(preset.iceMachineZ !== undefined ? preset.iceMachineZ : -2.0);
+                    setIceMachineRotation(preset.iceMachineRotation !== undefined ? preset.iceMachineRotation : -90);
+                    setShowcaseX(preset.showcaseX !== undefined ? preset.showcaseX : -0.975);
+                    setShowcaseZ(preset.showcaseZ !== undefined ? preset.showcaseZ : -2.1);
+                    setShowcaseRotation(preset.showcaseRotation !== undefined ? preset.showcaseRotation : -90);
                   }
                 } else {
                   setPosterImages({});
@@ -270,6 +320,42 @@ function App() {
                   }
                   const savedLeftPanel = localStorage.getItem('vibrant-bohr-active-left-panel-pattern');
                   setLeftPanelPattern(savedLeftPanel === 'poster' ? 'poster' : 'corkboard');
+                  
+                  const savedIceMachine = localStorage.getItem('vibrant-bohr-active-ice-machine');
+                  if (savedIceMachine) {
+                    try {
+                      const parsed = JSON.parse(savedIceMachine);
+                      setIceMachineX(parsed.iceMachineX !== undefined ? parsed.iceMachineX : 0.925);
+                      setIceMachineZ(parsed.iceMachineZ !== undefined ? parsed.iceMachineZ : -2.0);
+                      setIceMachineRotation(parsed.iceMachineRotation !== undefined ? parsed.iceMachineRotation : -90);
+                    } catch (e) {
+                      setIceMachineX(0.925);
+                      setIceMachineZ(-2.0);
+                      setIceMachineRotation(-90);
+                    }
+                  } else {
+                    setIceMachineX(0.925);
+                    setIceMachineZ(-2.0);
+                    setIceMachineRotation(-90);
+                  }
+
+                  const savedShowcase = localStorage.getItem('vibrant-bohr-active-showcase');
+                  if (savedShowcase) {
+                    try {
+                      const parsed = JSON.parse(savedShowcase);
+                      setShowcaseX(parsed.showcaseX !== undefined ? parsed.showcaseX : -0.975);
+                      setShowcaseZ(parsed.showcaseZ !== undefined ? parsed.showcaseZ : -2.1);
+                      setShowcaseRotation(parsed.showcaseRotation !== undefined ? parsed.showcaseRotation : -90);
+                    } catch (e) {
+                      setShowcaseX(-0.975);
+                      setShowcaseZ(-2.1);
+                      setShowcaseRotation(-90);
+                    }
+                  } else {
+                    setShowcaseX(-0.975);
+                    setShowcaseZ(-2.1);
+                    setShowcaseRotation(-90);
+                  }
                 }
               }}
               className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer max-w-[120px] sm:max-w-none"
@@ -295,7 +381,13 @@ function App() {
                           signboardX,
                           signboardZ,
                           signboardRotation,
-                          leftPanelPattern
+                          leftPanelPattern,
+                          iceMachineX,
+                          iceMachineZ,
+                          iceMachineRotation,
+                          showcaseX,
+                          showcaseZ,
+                          showcaseRotation
                         } : p
                       );
                       savePresets(updatedPresets);
@@ -361,7 +453,13 @@ function App() {
                       signboardX,
                       signboardZ,
                       signboardRotation,
-                      leftPanelPattern
+                      leftPanelPattern,
+                      iceMachineX,
+                      iceMachineZ,
+                      iceMachineRotation,
+                      showcaseX,
+                      showcaseZ,
+                      showcaseRotation
                     };
                     savePresets([...layoutPresets, newPreset]);
                     setSelectedPresetId(newPreset.id);
@@ -544,6 +642,116 @@ function App() {
                     )}
                   </div>
 
+                  {/* かき氷器の設定 */}
+                  <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+                    <span className="text-xs font-semibold text-gray-500">かき氷器の設定</span>
+                    <div className="flex flex-col gap-2.5 mt-1 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                      {/* X slider */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>左右位置 (X)</span>
+                          <span className="font-semibold">{iceMachineX.toFixed(2)}m</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="0.5" 
+                          max="1.5" 
+                          step="0.01"
+                          value={iceMachineX}
+                          onChange={(e) => setIceMachineX(parseFloat(e.target.value))}
+                          className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                      {/* Z slider */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>前後位置 (Z)</span>
+                          <span className="font-semibold">{iceMachineZ.toFixed(2)}m</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="-2.4" 
+                          max="0.0" 
+                          step="0.05"
+                          value={iceMachineZ}
+                          onChange={(e) => setIceMachineZ(parseFloat(e.target.value))}
+                          className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                      {/* Rotation slider */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>回転角度 (Y)</span>
+                          <span className="font-semibold">{iceMachineRotation}°</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="-180" 
+                          max="180" 
+                          step="5"
+                          value={iceMachineRotation}
+                          onChange={(e) => setIceMachineRotation(parseInt(e.target.value))}
+                          className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 保温器の設定 */}
+                  <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+                    <span className="text-xs font-semibold text-gray-500">保温器の設定</span>
+                    <div className="flex flex-col gap-2.5 mt-1 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                      {/* X slider */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>左右位置 (X)</span>
+                          <span className="font-semibold">{showcaseX.toFixed(2)}m</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="-1.5" 
+                          max="-0.5" 
+                          step="0.01"
+                          value={showcaseX}
+                          onChange={(e) => setShowcaseX(parseFloat(e.target.value))}
+                          className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                      {/* Z slider */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>前後位置 (Z)</span>
+                          <span className="font-semibold">{showcaseZ.toFixed(2)}m</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="-2.4" 
+                          max="0.0" 
+                          step="0.05"
+                          value={showcaseZ}
+                          onChange={(e) => setShowcaseZ(parseFloat(e.target.value))}
+                          className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                      {/* Rotation slider */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-xs text-gray-600">
+                          <span>回転角度 (Y)</span>
+                          <span className="font-semibold">{showcaseRotation}°</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          min="-180" 
+                          max="180" 
+                          step="5"
+                          value={showcaseRotation}
+                          onChange={(e) => setShowcaseRotation(parseInt(e.target.value))}
+                          className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* 3. 寸法表示 */}
                   <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
                     <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
@@ -582,6 +790,12 @@ function App() {
               signboardZ={signboardZ}
               signboardRotation={signboardRotation}
               leftPanelPattern={leftPanelPattern}
+              iceMachineX={iceMachineX}
+              iceMachineZ={iceMachineZ}
+              iceMachineRotation={iceMachineRotation}
+              showcaseX={showcaseX}
+              showcaseZ={showcaseZ}
+              showcaseRotation={showcaseRotation}
             />
             
             {/* Ground / Shadows */}

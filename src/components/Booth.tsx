@@ -76,6 +76,12 @@ interface BoothProps {
   signboardZ?: number;
   signboardRotation?: number;
   leftPanelPattern?: 'corkboard' | 'poster';
+  iceMachineX?: number;
+  iceMachineZ?: number;
+  iceMachineRotation?: number;
+  showcaseX?: number;
+  showcaseZ?: number;
+  showcaseRotation?: number;
 }
 
 function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
@@ -596,7 +602,13 @@ export function Booth({
   signboardX = 1.2,
   signboardZ = -0.6,
   signboardRotation = 45,
-  leftPanelPattern = 'corkboard'
+  leftPanelPattern = 'corkboard',
+  iceMachineX,
+  iceMachineZ = -2.0,
+  iceMachineRotation = -90,
+  showcaseX,
+  showcaseZ = -2.1,
+  showcaseRotation = -90
 }: BoothProps) {
   const zDepthLeftRight = dimensions.totalDepth - dimensions.frontCounterDepth;
   const zPosLeftRight = -dimensions.frontCounterDepth - zDepthLeftRight / 2;
@@ -844,10 +856,9 @@ export function Booth({
       {showDimensions && <DimensionsOverlay />}
 
       {/* Shaved Ice Machine on the Right Counter (Back side) */}
-      {/* Board is 0.4 wide, counter is 0.3. Align outer edges -> offset X by -0.05 from center of counter */}
       <ShavedIceMachine 
-        position={[rightCounterX - 0.05, dimensions.baseHeight, -2.0]} 
-        rotation={[0, -Math.PI / 2, 0]} 
+        position={[iceMachineX !== undefined ? iceMachineX : rightCounterX - 0.05, dimensions.baseHeight, iceMachineZ]} 
+        rotation={[0, iceMachineRotation * Math.PI / 180, 0]} 
       />
 
       {/* A2 Posters standing up from the left arch (facing X-direction) */}
@@ -977,8 +988,8 @@ export function Booth({
       )}
       {/* Hot Showcase (温め機) */}
       <HotShowcase 
-        position={[leftCounterX, dimensions.baseHeight, -2.1]} 
-        rotation={[0, -Math.PI / 2, 0]} 
+        position={[showcaseX !== undefined ? showcaseX : leftCounterX, dimensions.baseHeight, showcaseZ]} 
+        rotation={[0, showcaseRotation * Math.PI / 180, 0]} 
       />
 
       {/* Signboard (立て看板) */}
