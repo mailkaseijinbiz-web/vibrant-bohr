@@ -13,6 +13,7 @@ type LayoutPreset = {
   signboardX?: number;
   signboardZ?: number;
   signboardRotation?: number;
+  leftPanelPattern?: 'corkboard' | 'poster';
 };
 
 const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
@@ -59,6 +60,7 @@ function App() {
   const [signboardX, setSignboardX] = useState<number>(1.2);
   const [signboardZ, setSignboardZ] = useState<number>(-0.6);
   const [signboardRotation, setSignboardRotation] = useState<number>(45);
+  const [leftPanelPattern, setLeftPanelPattern] = useState<'corkboard' | 'poster'>('corkboard');
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
@@ -102,6 +104,10 @@ function App() {
         console.warn("Failed to load active signboard settings", e);
       }
     }
+    const savedLeftPanel = localStorage.getItem('vibrant-bohr-active-left-panel-pattern');
+    if (savedLeftPanel === 'poster' || savedLeftPanel === 'corkboard') {
+      setLeftPanelPattern(savedLeftPanel);
+    }
   }, []);
 
   useEffect(() => {
@@ -113,8 +119,9 @@ function App() {
         signboardZ,
         signboardRotation
       }));
+      localStorage.setItem('vibrant-bohr-active-left-panel-pattern', leftPanelPattern);
     }
-  }, [showSignboard, signboardX, signboardZ, signboardRotation, selectedPresetId]);
+  }, [showSignboard, signboardX, signboardZ, signboardRotation, leftPanelPattern, selectedPresetId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -234,6 +241,7 @@ function App() {
                     setSignboardX(preset.signboardX !== undefined ? preset.signboardX : 1.2);
                     setSignboardZ(preset.signboardZ !== undefined ? preset.signboardZ : -0.6);
                     setSignboardRotation(preset.signboardRotation !== undefined ? preset.signboardRotation : 45);
+                    setLeftPanelPattern(preset.leftPanelPattern || 'corkboard');
                   }
                 } else {
                   setPosterImages({});
@@ -260,6 +268,8 @@ function App() {
                     setSignboardZ(-0.6);
                     setSignboardRotation(45);
                   }
+                  const savedLeftPanel = localStorage.getItem('vibrant-bohr-active-left-panel-pattern');
+                  setLeftPanelPattern(savedLeftPanel === 'poster' ? 'poster' : 'corkboard');
                 }
               }}
               className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer max-w-[120px] sm:max-w-none"
@@ -284,7 +294,8 @@ function App() {
                           showSignboard,
                           signboardX,
                           signboardZ,
-                          signboardRotation
+                          signboardRotation,
+                          leftPanelPattern
                         } : p
                       );
                       savePresets(updatedPresets);
@@ -349,7 +360,8 @@ function App() {
                       showSignboard,
                       signboardX,
                       signboardZ,
-                      signboardRotation
+                      signboardRotation,
+                      leftPanelPattern
                     };
                     savePresets([...layoutPresets, newPreset]);
                     setSelectedPresetId(newPreset.id);
@@ -417,6 +429,35 @@ function App() {
                         }`}
                       >
                         のれん
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 左側面・右側パネル */}
+                  <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
+                    <span className="text-xs font-semibold text-gray-500">左側面・右側パネル</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setLeftPanelPattern('corkboard')}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                          leftPanelPattern === 'corkboard'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        コルクボード
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLeftPanelPattern('poster')}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                          leftPanelPattern === 'poster'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        A1ポスター
                       </button>
                     </div>
                   </div>
@@ -540,6 +581,7 @@ function App() {
               signboardX={signboardX}
               signboardZ={signboardZ}
               signboardRotation={signboardRotation}
+              leftPanelPattern={leftPanelPattern}
             />
             
             {/* Ground / Shadows */}

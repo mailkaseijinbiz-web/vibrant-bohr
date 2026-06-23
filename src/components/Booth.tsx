@@ -75,6 +75,7 @@ interface BoothProps {
   signboardX?: number;
   signboardZ?: number;
   signboardRotation?: number;
+  leftPanelPattern?: 'corkboard' | 'poster';
 }
 
 function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
@@ -594,7 +595,8 @@ export function Booth({
   showSignboard = true,
   signboardX = 1.2,
   signboardZ = -0.6,
-  signboardRotation = 45
+  signboardRotation = 45,
+  leftPanelPattern = 'corkboard'
 }: BoothProps) {
   const zDepthLeftRight = dimensions.totalDepth - dimensions.frontCounterDepth;
   const zPosLeftRight = -dimensions.frontCounterDepth - zDepthLeftRight / 2;
@@ -748,51 +750,61 @@ export function Booth({
           text="A1"
         />
         
-        {/* Right Corkboard */}
-        <group position={[0.65, 0, 0]}>
-          {/* Wooden Frame (3cm thick) */}
-          <mesh position={[0, 0, 0.015]}>
-            <boxGeometry args={[0.594, 0.841, 0.03]} />
-            <meshStandardMaterial color="#cda473" roughness={0.8} />
-          </mesh>
-          {/* Cork Inner (recessed, 2cm thick) */}
-          <mesh position={[0, 0, 0.015]}>
-            <boxGeometry args={[0.534, 0.781, 0.02]} />
-            <meshStandardMaterial color="#b88d5b" roughness={1.0} />
-          </mesh>
-          {/* Photos pinned to the corkboard */}
-          {[
-            { x: -0.18, y: 0.28, rot: 0.15, color: '#e74c3c' },
-            { x: 0.02, y: 0.32, rot: -0.05, color: '#3498db' },
-            { x: 0.18, y: 0.25, rot: 0.2, color: '#2ecc71' },
-            { x: -0.12, y: 0.12, rot: -0.15, color: '#f1c40f' },
-            { x: 0.1, y: 0.08, rot: 0.08, color: '#9b59b6' },
-            { x: -0.2, y: -0.05, rot: 0.05, color: '#e67e22' },
-            { x: 0.2, y: -0.1, rot: -0.12, color: '#1abc9c' },
-            { x: -0.05, y: -0.15, rot: -0.2, color: '#34495e' },
-            { x: -0.18, y: -0.28, rot: 0.1, color: '#7f8c8d' },
-            { x: 0.05, y: -0.32, rot: 0.05, color: '#d35400' },
-            { x: 0.18, y: -0.28, rot: -0.18, color: '#c0392b' },
-          ].map((photo, index) => (
-            <group key={`photo-${index}`} position={[photo.x, photo.y, 0.026 + index * 0.001]} rotation={[0, 0, photo.rot]}>
-              {/* Photo white border */}
-              <mesh position={[0, 0, 0]}>
-                <planeGeometry args={[0.12, 0.14]} />
-                <meshStandardMaterial color="#ffffff" roughness={0.8} />
-              </mesh>
-              {/* Photo image area (colored square) */}
-              <mesh position={[0, 0.01, 0.001]}>
-                <planeGeometry args={[0.10, 0.10]} />
-                <meshStandardMaterial color={photo.color} roughness={0.6} />
-              </mesh>
-              {/* Push pin */}
-              <mesh position={[0, 0.055, 0.002]}>
-                <sphereGeometry args={[0.005, 8, 8]} />
-                <meshStandardMaterial color="#2c3e50" />
-              </mesh>
-            </group>
-          ))}
-        </group>
+        {/* Right Panel (Corkboard or A1 Poster) */}
+        {leftPanelPattern === 'poster' ? (
+          <CustomPoster 
+            position={[0.65, 0, 0]} 
+            args={[0.594, 0.841, 0.002]} 
+            imageUrl={posterImages['a1-right']}
+            onClick={(e) => { e.stopPropagation(); onPosterClick?.('a1-right'); }}
+            text="A1"
+          />
+        ) : (
+          <group position={[0.65, 0, 0]}>
+            {/* Wooden Frame (3cm thick) */}
+            <mesh position={[0, 0, 0.015]}>
+              <boxGeometry args={[0.594, 0.841, 0.03]} />
+              <meshStandardMaterial color="#cda473" roughness={0.8} />
+            </mesh>
+            {/* Cork Inner (recessed, 2cm thick) */}
+            <mesh position={[0, 0, 0.015]}>
+              <boxGeometry args={[0.534, 0.781, 0.02]} />
+              <meshStandardMaterial color="#b88d5b" roughness={1.0} />
+            </mesh>
+            {/* Photos pinned to the corkboard */}
+            {[
+              { x: -0.18, y: 0.28, rot: 0.15, color: '#e74c3c' },
+              { x: 0.02, y: 0.32, rot: -0.05, color: '#3498db' },
+              { x: 0.18, y: 0.25, rot: 0.2, color: '#2ecc71' },
+              { x: -0.12, y: 0.12, rot: -0.15, color: '#f1c40f' },
+              { x: 0.1, y: 0.08, rot: 0.08, color: '#9b59b6' },
+              { x: -0.2, y: -0.05, rot: 0.05, color: '#e67e22' },
+              { x: 0.2, y: -0.1, rot: -0.12, color: '#1abc9c' },
+              { x: -0.05, y: -0.15, rot: -0.2, color: '#34495e' },
+              { x: -0.18, y: -0.28, rot: 0.1, color: '#7f8c8d' },
+              { x: 0.05, y: -0.32, rot: 0.05, color: '#d35400' },
+              { x: 0.18, y: -0.28, rot: -0.18, color: '#c0392b' },
+            ].map((photo, index) => (
+              <group key={`photo-${index}`} position={[photo.x, photo.y, 0.026 + index * 0.001]} rotation={[0, 0, photo.rot]}>
+                {/* Photo white border */}
+                <mesh position={[0, 0, 0]}>
+                  <planeGeometry args={[0.12, 0.14]} />
+                  <meshStandardMaterial color="#ffffff" roughness={0.8} />
+                </mesh>
+                {/* Photo image area (colored square) */}
+                <mesh position={[0, 0.01, 0.001]}>
+                  <planeGeometry args={[0.10, 0.10]} />
+                  <meshStandardMaterial color={photo.color} roughness={0.6} />
+                </mesh>
+                {/* Push pin */}
+                <mesh position={[0, 0.055, 0.002]}>
+                  <sphereGeometry args={[0.005, 8, 8]} />
+                  <meshStandardMaterial color="#2c3e50" />
+                </mesh>
+              </group>
+            ))}
+          </group>
+        )}
       </group>
       {/* Left Top */}
       <mesh position={[leftCounterX, dimensions.baseHeight - dimensions.topThickness / 2, zPosLeftRight]}>
