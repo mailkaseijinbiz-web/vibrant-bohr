@@ -888,37 +888,37 @@ export function Booth({
       {signPattern === 'banner' && (
         <group>
           {/* Silver support poles (clothesline poles) */}
-          {/* Vertical pole (front, right side when looking from left) */}
+          {/* Vertical pole (front, right side when looking from left) - placed at the front edge of the canopy/roof (Z = 0) */}
           <mesh 
-            position={[leftPoleX - 0.015, dimensions.baseHeight + (leftPoleH + 1.25) / 2, -dimensions.totalDepth / 2 + 0.9]}
+            position={[leftPoleX - 0.015, dimensions.baseHeight + (leftPoleH + 1.25) / 2, 0]}
           >
             <cylinderGeometry args={[0.015, 0.015, leftPoleH + 1.25, 16]} />
             <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
           </mesh>
 
-          {/* Vertical pole (back, left side when looking from left) */}
+          {/* Vertical pole (back, left side when looking from left) - placed at the back edge of the canopy/roof (Z = -dimensions.totalDepth) */}
           <mesh 
-            position={[leftPoleX - 0.015, dimensions.baseHeight + (leftPoleH + 1.25) / 2, -dimensions.totalDepth / 2 - 0.9]}
+            position={[leftPoleX - 0.015, dimensions.baseHeight + (leftPoleH + 1.25) / 2, -dimensions.totalDepth]}
           >
             <cylinderGeometry args={[0.015, 0.015, leftPoleH + 1.25, 16]} />
             <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
           </mesh>
 
-          {/* Bottom horizontal pole */}
+          {/* Bottom horizontal pole - spans the entire depth of the booth (Z = -dimensions.totalDepth / 2) */}
           <mesh 
             position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.025, -dimensions.totalDepth / 2]}
             rotation={[Math.PI / 2, 0, 0]}
           >
-            <cylinderGeometry args={[0.012, 0.012, 1.83, 16]} />
+            <cylinderGeometry args={[0.012, 0.012, dimensions.totalDepth + 0.03, 16]} />
             <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
           </mesh>
 
-          {/* Top horizontal pole */}
+          {/* Top horizontal pole - spans the entire depth of the booth (Z = -dimensions.totalDepth / 2) */}
           <mesh 
             position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.625, -dimensions.totalDepth / 2]}
             rotation={[Math.PI / 2, 0, 0]}
           >
-            <cylinderGeometry args={[0.012, 0.012, 1.83, 16]} />
+            <cylinderGeometry args={[0.012, 0.012, dimensions.totalDepth + 0.03, 16]} />
             <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
           </mesh>
 
