@@ -184,31 +184,35 @@ function App() {
     // Read state from URL query parameters on load
     const params = new URLSearchParams(window.location.search);
     const stateParam = params.get('state');
+    const shareParam = params.get('share');
+
+    const applyState = (state: any) => {
+      if (state.images) setPosterImages(state.images);
+      if (state.posterCount !== undefined) setPosterCount(state.posterCount);
+      if (state.signPattern !== undefined) setSignPattern(state.signPattern);
+      if (state.showSignboard !== undefined) setShowSignboard(state.showSignboard);
+      if (state.signboardX !== undefined) setSignboardX(state.signboardX);
+      if (state.signboardZ !== undefined) setSignboardZ(state.signboardZ);
+      if (state.signboardRotation !== undefined) setSignboardRotation(state.signboardRotation);
+      if (state.leftPanelPattern !== undefined) setLeftPanelPattern(state.leftPanelPattern);
+      if (state.iceMachineX !== undefined) setIceMachineX(state.iceMachineX);
+      if (state.iceMachineZ !== undefined) setIceMachineZ(state.iceMachineZ);
+      if (state.iceMachineRotation !== undefined) setIceMachineRotation(state.iceMachineRotation);
+      if (state.showcaseX !== undefined) setShowcaseX(state.showcaseX);
+      if (state.showcaseZ !== undefined) setShowcaseZ(state.showcaseZ);
+      if (state.showcaseRotation !== undefined) setShowcaseRotation(state.showcaseRotation);
+      if (state.leftFrontPanelPattern !== undefined) setLeftFrontPanelPattern(state.leftFrontPanelPattern);
+    };
+
     if (stateParam) {
       try {
         const decoded = decodeURIComponent(escape(atob(stateParam)));
         const state = JSON.parse(decoded);
         if (state) {
-          if (state.images) setPosterImages(state.images);
-          if (state.posterCount !== undefined) setPosterCount(state.posterCount);
-          if (state.signPattern !== undefined) setSignPattern(state.signPattern);
-          if (state.showSignboard !== undefined) setShowSignboard(state.showSignboard);
-          if (state.signboardX !== undefined) setSignboardX(state.signboardX);
-          if (state.signboardZ !== undefined) setSignboardZ(state.signboardZ);
-          if (state.signboardRotation !== undefined) setSignboardRotation(state.signboardRotation);
-          if (state.leftPanelPattern !== undefined) setLeftPanelPattern(state.leftPanelPattern);
-          if (state.iceMachineX !== undefined) setIceMachineX(state.iceMachineX);
-          if (state.iceMachineZ !== undefined) setIceMachineZ(state.iceMachineZ);
-          if (state.iceMachineRotation !== undefined) setIceMachineRotation(state.iceMachineRotation);
-          if (state.showcaseX !== undefined) setShowcaseX(state.showcaseX);
-          if (state.showcaseZ !== undefined) setShowcaseZ(state.showcaseZ);
-          if (state.showcaseRotation !== undefined) setShowcaseRotation(state.showcaseRotation);
-          if (state.leftFrontPanelPattern !== undefined) setLeftFrontPanelPattern(state.leftFrontPanelPattern);
-          
+          applyState(state);
           setTimeout(() => {
             showToast("共有されたレイアウトを読み込みました！");
           }, 500);
-
           // Clear URL parameter
           const newUrl = window.location.pathname;
           window.history.replaceState({}, '', newUrl);
@@ -216,6 +220,27 @@ function App() {
       } catch (e) {
         console.error("Failed to parse shared state from URL", e);
       }
+    } else if (shareParam) {
+      fetch(`/api/share?id=${shareParam}`)
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error("Failed to load share state from server");
+        })
+        .then((state) => {
+          if (state) {
+            applyState(state);
+            setTimeout(() => {
+              showToast("共有されたレイアウトを読み込みました！");
+            }, 500);
+            // Clear URL parameter
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          showToast("共有レイアウトの読み込みに失敗しました");
+        });
     }
   }, []);
 
@@ -397,24 +422,53 @@ function App() {
       
       const jsonStr = JSON.stringify(state);
       const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
-      const shareUrl = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
+      const longShareUrl = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
       
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        showToast("共有リンクをクリップボードにコピーしました！");
-      }).catch((err) => {
-        console.error("Failed to copy link via navigator.clipboard", err);
-        const textArea = document.createElement("textarea");
-        textArea.value = shareUrl;
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand('copy');
-          showToast("共有リンクをコピーしました！");
-        } catch (e) {
-          alert(`リンクのコピーに失敗しました。以下のURLをコピーしてください：\n${shareUrl}`);
-        }
-        document.body.removeChild(textArea);
-      });
+      const copyUrlToClipboard = (url: string) => {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast("共有リンクをクリップボードにコピーしました！");
+        }).catch((err) => {
+          console.error("Failed to copy link via navigator.clipboard", err);
+          const textArea = document.createElement("textarea");
+          textArea.value = url;
+          document.body.appendChild(textArea);
+          textArea.select();
+          try {
+            document.execCommand('copy');
+            showToast("共有リンクをコピーしました！");
+          } catch (e) {
+            alert(`リンクのコピーに失敗しました。以下のURLをコピーしてください：\n${url}`);
+          }
+          document.body.removeChild(textArea);
+        });
+      };
+
+      if (longShareUrl.length >= 2000) {
+        showToast("短縮リンクを生成中...");
+        fetch('/api/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state })
+        })
+          .then((res) => {
+            if (res.ok) return res.json();
+            throw new Error("Server share failed");
+          })
+          .then((data) => {
+            if (data.id) {
+              const shortUrl = `${window.location.origin}${window.location.pathname}?share=${data.id}`;
+              copyUrlToClipboard(shortUrl);
+            } else {
+              copyUrlToClipboard(longShareUrl);
+            }
+          })
+          .catch((err) => {
+            console.warn("Failed to create short share link, copying long link", err);
+            copyUrlToClipboard(longShareUrl);
+          });
+      } else {
+        copyUrlToClipboard(longShareUrl);
+      }
     } catch (e) {
       console.error("Failed to generate share URL", e);
       showToast("共有リンクの生成に失敗しました");
