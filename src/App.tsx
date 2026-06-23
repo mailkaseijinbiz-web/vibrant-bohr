@@ -12,12 +12,33 @@ const generatedTemplates = [
   '/posters/poster_kakigori_1782184890220.png',
 ];
 
+type LayoutPreset = {
+  id: string;
+  name: string;
+  images: Record<string, string>;
+};
+
 function App() {
   const [showDimensions, setShowDimensions] = useState(false);
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
   const [templateGallery, setTemplateGallery] = useState<string[]>(generatedTemplates);
   const [isTemplateSettingsOpen, setIsTemplateSettingsOpen] = useState(false);
+  const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>([
+    {
+      id: 'default',
+      name: 'たこ焼き屋台セット',
+      images: {
+        'a2--1.5': '/posters/poster_takoyaki_1782184842429.png',
+        'a2--0.5': '/posters/poster_negidako_1782184913396.png',
+        'a2-0.5': '/posters/poster_mentai_1782184922839.png',
+        'a2-1.5': '/posters/poster_takosen_1782184868897.png',
+        'a1-left': '/posters/poster_drinks_1782184880492.png',
+        'a1-middle': '/posters/poster_kakigori_1782184890220.png',
+      }
+    }
+  ]);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('');
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
@@ -39,11 +60,45 @@ function App() {
       <header className="w-full p-4 sm:p-6 bg-white shadow-sm flex flex-col sm:flex-row items-center justify-between z-10 relative gap-3 sm:gap-0">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight text-center sm:text-left">3D Booth Preview</h1>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200">
+            <select
+              value={selectedPresetId}
+              onChange={(e) => {
+                const id = e.target.value;
+                setSelectedPresetId(id);
+                if (id) {
+                  const preset = layoutPresets.find(p => p.id === id);
+                  if (preset) setPosterImages(preset.images);
+                } else {
+                  setPosterImages({});
+                }
+              }}
+              className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer max-w-[120px] sm:max-w-none"
+            >
+              <option value="">初期状態</option>
+              {layoutPresets.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <button 
+              onClick={() => {
+                const name = prompt("テンプレート名を入力してください", `設定 ${layoutPresets.length}`);
+                if (name) {
+                  const newPreset = { id: Date.now().toString(), name, images: { ...posterImages } };
+                  setLayoutPresets(prev => [...prev, newPreset]);
+                  setSelectedPresetId(newPreset.id);
+                }
+              }}
+              className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              保存
+            </button>
+          </div>
           <button 
             onClick={() => setIsTemplateSettingsOpen(true)}
-            className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200 text-purple-700 font-medium hover:bg-purple-100 transition-colors text-sm sm:text-base"
+            className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200 text-purple-700 font-medium hover:bg-purple-100 transition-colors text-sm sm:text-base whitespace-nowrap"
           >
-            テンプレート設定
+            画像一覧
           </button>
           <label className="flex items-center gap-2 cursor-pointer bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 text-blue-700 font-medium hover:bg-blue-100 transition-colors text-sm sm:text-base">
             <input 
