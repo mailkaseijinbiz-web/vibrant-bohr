@@ -49,55 +49,6 @@ function App() {
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
   const [posterCount, setPosterCount] = useState<4 | 5>(4);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [presetsRes, galleryRes] = await Promise.all([
-          fetch('/api/presets').catch(() => ({ ok: false, json: () => [] })),
-          fetch('/api/gallery').catch(() => ({ ok: false, json: () => [] }))
-        ]);
-
-        if (presetsRes.ok) {
-          const data = await presetsRes.json();
-          if (data && data.length > 0) setLayoutPresets(data);
-        } else {
-          throw new Error("Presets API failed");
-        }
-
-        if (galleryRes.ok) {
-          const data = await galleryRes.json();
-          if (data) {
-            if (Array.isArray(data)) {
-              setTemplateGallery({ "": data });
-            } else {
-              setTemplateGallery(data);
-            }
-          }
-        } else {
-          throw new Error("Gallery API failed");
-        }
-      } catch (err) {
-        console.log("Fallback to localStorage");
-        const savedPresets = localStorage.getItem('vibrant-bohr-presets');
-        if (savedPresets) setLayoutPresets(JSON.parse(savedPresets));
-        else setLayoutPresets([]);
-
-        const savedGallery = localStorage.getItem('vibrant-bohr-gallery');
-        if (savedGallery) {
-          const parsed = JSON.parse(savedGallery);
-          if (Array.isArray(parsed)) {
-            setTemplateGallery({ "": parsed });
-          } else {
-            setTemplateGallery(parsed);
-          }
-        } else {
-          setTemplateGallery({});
-        }
-      }
-    };
-    loadData();
-  }, []);
-
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
     try {
@@ -125,6 +76,82 @@ function App() {
       console.warn("Failed to save gallery to server", e);
     }
   };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [presetsRes, galleryRes] = await Promise.all([
+          fetch('/api/presets').catch(() => ({ ok: false, json: () => [] })),
+          fetch('/api/gallery').catch(() => ({ ok: false, json: () => [] }))
+        ]);
+
+        if (presetsRes.ok) {
+          const data = await presetsRes.json();
+          if (data && data.length > 0) {
+            setLayoutPresets(data);
+          } else {
+            const savedPresets = localStorage.getItem('vibrant-bohr-presets');
+            if (savedPresets) {
+              const parsed = JSON.parse(savedPresets);
+              if (parsed && parsed.length > 0) {
+                setLayoutPresets(parsed);
+                savePresets(parsed);
+              }
+            }
+          }
+        } else {
+          throw new Error("Presets API failed");
+        }
+
+        if (galleryRes.ok) {
+          const data = await galleryRes.json();
+          if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) {
+            if (Array.isArray(data)) {
+              setTemplateGallery({ "": data });
+            } else {
+              setTemplateGallery(data);
+            }
+          } else {
+            const savedGallery = localStorage.getItem('vibrant-bohr-gallery');
+            if (savedGallery) {
+              const parsed = JSON.parse(savedGallery);
+              if (Array.isArray(parsed)) {
+                if (parsed.length > 0) {
+                  setTemplateGallery({ "": parsed });
+                  saveGallery({ "": parsed });
+                }
+              } else {
+                if (parsed && Object.keys(parsed).length > 0) {
+                  setTemplateGallery(parsed);
+                  saveGallery(parsed);
+                }
+              }
+            }
+          }
+        } else {
+          throw new Error("Gallery API failed");
+        }
+      } catch (err) {
+        console.log("Fallback to localStorage due to API failure");
+        const savedPresets = localStorage.getItem('vibrant-bohr-presets');
+        if (savedPresets) setLayoutPresets(JSON.parse(savedPresets));
+        else setLayoutPresets([]);
+
+        const savedGallery = localStorage.getItem('vibrant-bohr-gallery');
+        if (savedGallery) {
+          const parsed = JSON.parse(savedGallery);
+          if (Array.isArray(parsed)) {
+            setTemplateGallery({ "": parsed });
+          } else {
+            setTemplateGallery(parsed);
+          }
+        } else {
+          setTemplateGallery({});
+        }
+      }
+    };
+    loadData();
+  }, []);
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
