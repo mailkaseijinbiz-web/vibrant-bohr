@@ -534,9 +534,14 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
           <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, zDepthLeftRight]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
-        {/* Middle Horizontal Shelf (at H570 from bottom board, which is Y_local = 0.015 + 0.57 = 0.585m) */}
-        <mesh position={[-0.0075, 0.585, 0]}>
-          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, zDepthLeftRight - 0.03]} />
+        {/* Middle Horizontal Shelf for Front and Middle Compartments (standard width, length 1.56m) */}
+        <mesh position={[-0.0075, 0.585, 0.18]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, 1.56]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Middle Horizontal Shelf for Back Compartment (extended width like a table, length 0.345m) */}
+        <mesh position={[-0.0075 - 0.075, 0.585, -0.7875]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015 + 0.15, 0.015, 0.345]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
         {/* Divider 1 (between front and middle compartments, Z_local = 0.1875) */}
@@ -583,9 +588,14 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
           <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, zDepthLeftRight]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
-        {/* Middle Horizontal Shelf (at H570 from bottom board, which is Y_local = 0.015 + 0.57 = 0.585m) */}
-        <mesh position={[0.0075, 0.585, 0]}>
-          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, zDepthLeftRight - 0.03]} />
+        {/* Middle Horizontal Shelf for Front and Middle Compartments (standard width, length 1.56m) */}
+        <mesh position={[0.0075, 0.585, 0.18]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, 1.56]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Middle Horizontal Shelf for Back Compartment (extended width like a table, length 0.345m) */}
+        <mesh position={[0.0075 + 0.075, 0.585, -0.7875]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015 + 0.15, 0.015, 0.345]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
         {/* Divider 1 (between front and middle compartments, Z_local = 0.1875) */}
@@ -795,15 +805,15 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
 
           {/* Noren Curtain */}
           <CustomPoster 
-            position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH - 0.03 - 0.03 - 0.15, -dimensions.totalDepth / 2]}
+            position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH - 0.03 - 0.03 - 0.075, -dimensions.totalDepth / 2]}
             rotation={[0, -Math.PI / 2, 0]}
-            args={[posterCount === 5 ? 2.22 : 1.77, 0.30, 0.002]}
+            args={[posterCount === 5 ? 2.22 : 1.77, 0.15, 0.002]}
             imageUrl={posterImages['logo']}
             onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
             text="のれんロゴ"
             bgColor="#ffffff"
             textColor="#333333"
-            fontSize={0.18}
+            fontSize={0.09}
             letterSpacing={0.08}
           />
         </group>
