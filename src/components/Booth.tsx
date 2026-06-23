@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Line, Text } from '@react-three/drei';
 
@@ -25,6 +25,13 @@ const colors = {
 };
 
 function CustomPoster({ position, rotation, args, imageUrl, onClick, text }: { position: [number, number, number], rotation?: [number, number, number], args: [number, number, number], imageUrl?: string, onClick?: (e: any) => void, text: string }) {
+  const [hovered, setHovered] = useState(false);
+  useEffect(() => {
+    if (hovered) document.body.style.cursor = 'pointer';
+    else document.body.style.cursor = 'auto';
+    return () => { document.body.style.cursor = 'auto'; };
+  }, [hovered]);
+
   const texture = useMemo(() => {
     if (!imageUrl) return null;
     const loader = new THREE.TextureLoader();
@@ -33,7 +40,12 @@ function CustomPoster({ position, rotation, args, imageUrl, onClick, text }: { p
 
   return (
     <group position={position} rotation={rotation}>
-      <mesh onClick={onClick} position={[0, 0, args[2]/2]}>
+      <mesh 
+        onClick={onClick} 
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); }}
+        onPointerOut={(e) => { e.stopPropagation(); setHovered(false); }}
+        position={[0, 0, args[2]/2]}
+      >
         <boxGeometry args={args} />
         <meshStandardMaterial color={texture ? "#ffffff" : "#d4d4d4"} map={texture || null} roughness={0.9} />
       </mesh>

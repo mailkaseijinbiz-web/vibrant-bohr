@@ -11,7 +11,7 @@ function App() {
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
-    fileInputRef.current?.click();
+    // Removed programmatic click to support mobile Safari which blocks it.
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,7 +20,7 @@ function App() {
       const url = URL.createObjectURL(file);
       setPosterImages(prev => ({ ...prev, [activePosterId]: url }));
     }
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setActivePosterId(null);
   };
 
   return (
@@ -71,14 +71,34 @@ function App() {
         </Canvas>
       </main>
 
-      {/* Hidden file input for poster uploads */}
-      <input 
-        type="file" 
-        ref={fileInputRef} 
-        className="hidden" 
-        accept="image/*" 
-        onChange={handleFileUpload} 
-      />
+      {/* Upload Modal (Required for Mobile Safari support) */}
+      {activePosterId && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm flex flex-col items-center gap-6">
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-800">画像を選択</h3>
+              <p className="text-sm text-gray-500 mt-1">ポスターに表示する画像をアップロードします</p>
+            </div>
+            
+            <label className="w-full flex items-center justify-center gap-2 cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors shadow-sm active:scale-95">
+              <span>写真を選ぶ</span>
+              <input 
+                type="file" 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleFileUpload} 
+              />
+            </label>
+
+            <button 
+              onClick={() => setActivePosterId(null)}
+              className="w-full py-3 rounded-xl font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors active:scale-95"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
