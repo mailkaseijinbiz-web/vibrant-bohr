@@ -69,6 +69,7 @@ interface BoothProps {
   showDimensions?: boolean;
   posterImages?: Record<string, string>;
   onPosterClick?: (id: string) => void;
+  posterCount?: 4 | 5;
 }
 
 function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
@@ -453,7 +454,7 @@ function DimensionsOverlay() {
   );
 }
 
-export function Booth({ showDimensions = false, posterImages = {}, onPosterClick }: BoothProps) {
+export function Booth({ showDimensions = false, posterImages = {}, onPosterClick, posterCount = 4 }: BoothProps) {
   const zDepthLeftRight = dimensions.totalDepth - dimensions.frontCounterDepth;
   const zPosLeftRight = -dimensions.frontCounterDepth - zDepthLeftRight / 2;
 
@@ -602,12 +603,12 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
         rotation={[0, -Math.PI / 2, 0]} 
       />
 
-      {/* 4 A2 Posters standing up from the left arch (facing X-direction) */}
+      {/* A2 Posters standing up from the left arch (facing X-direction) */}
       <group 
         position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 / 2, -dimensions.totalDepth / 2]}
         rotation={[0, -Math.PI / 2, 0]}
       >
-        {[-1.5, -0.5, 0.5, 1.5].map((i) => {
+        {(posterCount === 5 ? [-2, -1, 0, 1, 2] : [-1.5, -0.5, 0.5, 1.5]).map((i) => {
           const posterW = 0.42;
           const posterH = 0.594;
           const gap = 0.03; // 3cm gap between posters
@@ -629,7 +630,7 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
       <CustomPoster 
         position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.20, -dimensions.totalDepth / 2]}
         rotation={[0, -Math.PI / 2, 0]}
-        args={[1.77, 0.35, 0.02]}
+        args={[posterCount === 5 ? 2.22 : 1.77, 0.35, 0.02]}
         imageUrl={posterImages['logo']}
         onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
         text="LOGO"

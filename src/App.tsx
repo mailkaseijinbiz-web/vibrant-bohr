@@ -7,6 +7,7 @@ type LayoutPreset = {
   id: string;
   name: string;
   images: Record<string, string>;
+  posterCount?: 4 | 5;
 };
 
 const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
@@ -45,6 +46,7 @@ function App() {
   const [isTemplateSettingsOpen, setIsTemplateSettingsOpen] = useState(false);
   const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
+  const [posterCount, setPosterCount] = useState<4 | 5>(4);
 
   useEffect(() => {
     const loadData = async () => {
@@ -137,9 +139,13 @@ function App() {
                 setSelectedPresetId(id);
                 if (id) {
                   const preset = layoutPresets.find(p => p.id === id);
-                  if (preset) setPosterImages(preset.images);
+                  if (preset) {
+                    setPosterImages(preset.images);
+                    setPosterCount(preset.posterCount || 4);
+                  }
                 } else {
                   setPosterImages({});
+                  setPosterCount(4);
                 }
               }}
               className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer max-w-[120px] sm:max-w-none"
@@ -156,7 +162,7 @@ function App() {
                   onClick={() => {
                     if (confirm("現在の表示状態（ポスター・ロゴの組み合わせ）でこのテンプレートを上書き保存しますか？")) {
                       const updatedPresets = layoutPresets.map(p => 
-                        p.id === selectedPresetId ? { ...p, images: { ...posterImages } } : p
+                        p.id === selectedPresetId ? { ...p, images: { ...posterImages }, posterCount } : p
                       );
                       savePresets(updatedPresets);
                     }
@@ -206,7 +212,7 @@ function App() {
                 onClick={() => {
                   const name = prompt("新しいテンプレート名を入力してください", `設定 ${layoutPresets.length + 1}`);
                   if (name) {
-                    const newPreset = { id: Date.now().toString(), name, images: { ...posterImages } };
+                    const newPreset: LayoutPreset = { id: Date.now().toString(), name, images: { ...posterImages }, posterCount };
                     savePresets([...layoutPresets, newPreset]);
                     setSelectedPresetId(newPreset.id);
                   }
@@ -218,6 +224,19 @@ function App() {
               </button>
             </div>
           </div>
+          
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200">
+            <span className="text-sm text-gray-600 font-medium whitespace-nowrap hidden sm:inline">ポスター配置:</span>
+            <select 
+              value={posterCount}
+              onChange={(e) => setPosterCount(Number(e.target.value) as 4 | 5)}
+              className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer"
+            >
+              <option value={4}>A2 4枚</option>
+              <option value={5}>A2 5枚</option>
+            </select>
+          </div>
+
           <button 
             onClick={() => setIsTemplateSettingsOpen(true)}
             className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200 text-purple-700 font-medium hover:bg-purple-100 transition-colors text-sm sm:text-base whitespace-nowrap"
@@ -248,6 +267,7 @@ function App() {
               showDimensions={showDimensions} 
               posterImages={posterImages}
               onPosterClick={handlePosterClick}
+              posterCount={posterCount}
             />
             
             {/* Ground / Shadows */}
