@@ -400,10 +400,30 @@ function App() {
     }
     setActivePosterId(null);
   };
-  const handleShare = () => {
+  const handleShare = async () => {
     try {
+      showToast("共有用の設定を準備中...");
+      
+      // Upload any legacy/local base64 images to the server first in parallel
+      const uploadPromises = Object.entries(posterImages).map(async ([key, val]) => {
+        if (val && val.startsWith('data:')) {
+          const shortUrl = await uploadImageToServer(val);
+          return { key, val: shortUrl };
+        }
+        return { key, val };
+      });
+      
+      const uploadedResults = await Promise.all(uploadPromises);
+      const updatedImages: Record<string, string> = {};
+      uploadedResults.forEach(({ key, val }) => {
+        if (val) updatedImages[key] = val;
+      });
+      
+      // Update local state as well to save memory and synchronize
+      setPosterImages(updatedImages);
+
       const state = {
-        images: posterImages,
+        images: updatedImages,
         posterCount,
         signPattern,
         showSignboard,
