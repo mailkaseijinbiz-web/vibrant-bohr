@@ -169,9 +169,41 @@ function App() {
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
+            
+            {selectedPresetId && selectedPresetId !== 'default' && (
+              <>
+                <button 
+                  onClick={() => {
+                    if (confirm("現在の表示状態（ポスター・ロゴの組み合わせ）でこのテンプレートを上書き保存しますか？")) {
+                      const updatedPresets = layoutPresets.map(p => 
+                        p.id === selectedPresetId ? { ...p, images: { ...posterImages } } : p
+                      );
+                      savePresets(updatedPresets);
+                    }
+                  }}
+                  className="bg-green-600 text-white text-xs px-3 py-1.5 rounded hover:bg-green-700 transition-colors whitespace-nowrap"
+                >
+                  上書き
+                </button>
+                <button 
+                  onClick={() => {
+                    if (confirm("このテンプレートを削除しますか？")) {
+                      const updatedPresets = layoutPresets.filter(p => p.id !== selectedPresetId);
+                      savePresets(updatedPresets);
+                      setSelectedPresetId('');
+                      setPosterImages({});
+                    }
+                  }}
+                  className="bg-red-500 text-white text-xs px-3 py-1.5 rounded hover:bg-red-600 transition-colors whitespace-nowrap"
+                >
+                  削除
+                </button>
+              </>
+            )}
+
             <button 
               onClick={() => {
-                const name = prompt("テンプレート名を入力してください", `設定 ${layoutPresets.length}`);
+                const name = prompt("新しいテンプレート名を入力してください", `設定 ${layoutPresets.length}`);
                 if (name) {
                   const newPreset = { id: Date.now().toString(), name, images: { ...posterImages } };
                   savePresets([...layoutPresets, newPreset]);
@@ -180,7 +212,7 @@ function App() {
               }}
               className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
             >
-              保存
+              新規保存
             </button>
           </div>
           <button 
