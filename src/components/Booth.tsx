@@ -535,14 +535,9 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
           <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, zDepthLeftRight]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
-        {/* Middle Horizontal Shelf for Front and Middle Compartments (standard width, length 1.56m) */}
-        <mesh position={[-0.0075, 0.585, 0.18]}>
-          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, 1.56]} />
-          <meshStandardMaterial color={colors.wood} roughness={0.7} />
-        </mesh>
-        {/* Middle Horizontal Shelf for Back Compartment (extended width like a table, length 0.345m) */}
-        <mesh position={[-0.0075 - 0.075, 0.585, -0.7875]}>
-          <boxGeometry args={[dimensions.rightCounterWidth - 0.015 + 0.15, 0.015, 0.345]} />
+        {/* Middle Horizontal Shelf (at H570 from bottom board, which is Y_local = 0.015 + 0.57 = 0.585m) */}
+        <mesh position={[-0.0075, 0.585, 0]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, zDepthLeftRight - 0.03]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
         {/* Divider 1 (between front and middle compartments, Z_local = 0.1875) */}
@@ -589,14 +584,9 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
           <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, zDepthLeftRight]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
-        {/* Middle Horizontal Shelf for Front and Middle Compartments (standard width, length 1.56m) */}
-        <mesh position={[0.0075, 0.585, 0.18]}>
-          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, 1.56]} />
-          <meshStandardMaterial color={colors.wood} roughness={0.7} />
-        </mesh>
-        {/* Middle Horizontal Shelf for Back Compartment (extended width like a table, length 0.345m) */}
-        <mesh position={[0.0075 + 0.075, 0.585, -0.7875]}>
-          <boxGeometry args={[dimensions.leftCounterWidth - 0.015 + 0.15, 0.015, 0.345]} />
+        {/* Middle Horizontal Shelf (at H570 from bottom board, which is Y_local = 0.015 + 0.57 = 0.585m) */}
+        <mesh position={[0.0075, 0.585, 0]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, zDepthLeftRight - 0.03]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
         {/* Divider 1 (between front and middle compartments, Z_local = 0.1875) */}
