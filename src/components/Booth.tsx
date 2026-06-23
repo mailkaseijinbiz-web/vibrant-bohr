@@ -24,7 +24,14 @@ const colors = {
   punchedMetal: "#ffffff"
 };
 
-function CustomPoster({ position, rotation, args, imageUrl, onClick, text }: { position: [number, number, number], rotation?: [number, number, number], args: [number, number, number], imageUrl?: string, onClick?: (e: any) => void, text: string }) {
+function CustomPoster({ 
+  position, rotation, args, imageUrl, onClick, text,
+  bgColor = "#d4d4d4", textColor = "#ffffff", fontSize = 0.15, letterSpacing = 0
+}: { 
+  position: [number, number, number], rotation?: [number, number, number], args: [number, number, number], 
+  imageUrl?: string, onClick?: (e: any) => void, text: string,
+  bgColor?: string, textColor?: string, fontSize?: number, letterSpacing?: number
+}) {
   const [hovered, setHovered] = useState(false);
   useEffect(() => {
     if (hovered) document.body.style.cursor = 'pointer';
@@ -47,10 +54,10 @@ function CustomPoster({ position, rotation, args, imageUrl, onClick, text }: { p
         position={[0, 0, args[2]/2]}
       >
         <boxGeometry args={args} />
-        <meshStandardMaterial color={texture ? "#ffffff" : "#d4d4d4"} map={texture || null} roughness={0.9} />
+        <meshStandardMaterial color={texture ? "#ffffff" : bgColor} map={texture || null} roughness={0.9} />
       </mesh>
       {!texture && (
-        <Text position={[0, 0, args[2] + 0.001]} fontSize={0.15} color="#ffffff" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf">
+        <Text position={[0, 0, args[2] + 0.001]} fontSize={fontSize} color={textColor} letterSpacing={letterSpacing} font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf">
           {text}
         </Text>
       )}
@@ -570,26 +577,18 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
       </group>
 
       {/* Top Banner (LOGO) */}
-      <group 
+      <CustomPoster 
         position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.20, -dimensions.totalDepth / 2]}
         rotation={[0, -Math.PI / 2, 0]}
-      >
-        <mesh>
-          <planeGeometry args={[2.2, 0.35]} />
-          <meshStandardMaterial color="#222222" roughness={0.8} side={THREE.DoubleSide} />
-        </mesh>
-        <Text
-          position={[0, 0, 0.01]}
-          fontSize={0.25}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf"
-          letterSpacing={0.1}
-        >
-          LOGO
-        </Text>
-      </group>
+        args={[2.2, 0.35, 0.02]}
+        imageUrl={posterImages['logo']}
+        onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
+        text="LOGO"
+        bgColor="#222222"
+        textColor="#ffffff"
+        fontSize={0.25}
+        letterSpacing={0.1}
+      />
       {/* Hot Showcase (温め機) */}
       <HotShowcase 
         position={[leftCounterX, dimensions.baseHeight, -2.1]} 
