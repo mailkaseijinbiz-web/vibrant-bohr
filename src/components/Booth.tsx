@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Line, Text } from '@react-three/drei';
 
@@ -66,7 +66,7 @@ function Arch({ z }: { z: number }) {
       rightArchPoints.map(p => new THREE.Vector3(p[0], p[1], z)),
       false, 'catmullrom', 0.5
     );
-    const path = new THREE.CurvePath();
+    const path = new THREE.CurvePath<THREE.Vector3>();
     path.add(leftCurve);
     path.add(rightCurve);
     return path;

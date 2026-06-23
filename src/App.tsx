@@ -8,10 +8,10 @@ function App() {
 
   return (
     <div className="w-full h-screen bg-gray-100 flex flex-col items-center">
-      <header className="w-full p-6 bg-white shadow-sm flex items-center justify-between z-10 relative">
-        <h1 className="text-2xl font-bold text-gray-800 tracking-tight">3D Booth Preview</h1>
-        <div className="flex gap-4 items-center">
-          <label className="flex items-center gap-2 cursor-pointer bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 text-blue-700 font-medium hover:bg-blue-100 transition-colors">
+      <header className="w-full p-4 sm:p-6 bg-white shadow-sm flex flex-col sm:flex-row items-center justify-between z-10 relative gap-3 sm:gap-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight text-center sm:text-left">3D Booth Preview</h1>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
+          <label className="flex items-center gap-2 cursor-pointer bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 text-blue-700 font-medium hover:bg-blue-100 transition-colors text-sm sm:text-base">
             <input 
               type="checkbox" 
               checked={showDimensions} 
@@ -20,8 +20,8 @@ function App() {
             />
             寸法表示
           </label>
-          <p className="text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-full border border-gray-200">
-            Drag to rotate • Scroll to zoom
+          <p className="text-xs sm:text-sm text-gray-500 bg-gray-50 px-3 sm:px-4 py-2 rounded-full border border-gray-200 text-center">
+            Drag to rotate • Scroll/Pinch to zoom
           </p>
         </div>
       </header>
