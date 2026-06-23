@@ -550,11 +550,6 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
           <boxGeometry args={[dimensions.rightCounterWidth - 0.015, dimensions.woodHeight - 0.015, 0.015]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
-        {/* Small shelf in the back compartment (at 160mm above middle shelf, Y_local = 0.76m, Z_local = -0.79125m) */}
-        <mesh position={[-0.0075, 0.76, -0.79125]}>
-          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, 0.34]} />
-          <meshStandardMaterial color={colors.wood} roughness={0.7} />
-        </mesh>
       </group>
       {/* Right Top */}
       <mesh position={[rightCounterX, dimensions.baseHeight - dimensions.topThickness / 2, zPosLeftRight]}>
@@ -597,11 +592,6 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
         {/* Divider 2 (between middle and back compartments, Z_local = -0.6075) */}
         <mesh position={[0.0075, 0.015 + (dimensions.woodHeight - 0.015) / 2, -0.6075]}>
           <boxGeometry args={[dimensions.leftCounterWidth - 0.015, dimensions.woodHeight - 0.015, 0.015]} />
-          <meshStandardMaterial color={colors.wood} roughness={0.7} />
-        </mesh>
-        {/* Small shelf in the back compartment (at 160mm above middle shelf, Y_local = 0.76m, Z_local = -0.79125m) */}
-        <mesh position={[0.0075, 0.76, -0.79125]}>
-          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, 0.34]} />
           <meshStandardMaterial color={colors.wood} roughness={0.7} />
         </mesh>
       </group>
