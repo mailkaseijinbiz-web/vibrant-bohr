@@ -42,7 +42,8 @@ function App() {
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
   
-  const [templateGallery, setTemplateGallery] = useState<string[]>([]);
+  const [templateGallery, setTemplateGallery] = useState<Record<string, string[]>>({});
+  const [activeGalleryTab, setActiveGalleryTab] = useState<string>('');
   const [isTemplateSettingsOpen, setIsTemplateSettingsOpen] = useState(false);
   const [layoutPresets, setLayoutPresets] = useState<LayoutPreset[]>([]);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
@@ -65,7 +66,13 @@ function App() {
 
         if (galleryRes.ok) {
           const data = await galleryRes.json();
-          if (data && data.length > 0) setTemplateGallery(data);
+          if (data) {
+            if (Array.isArray(data)) {
+              setTemplateGallery({ "": data });
+            } else {
+              setTemplateGallery(data);
+            }
+          }
         } else {
           throw new Error("Gallery API failed");
         }
@@ -76,8 +83,16 @@ function App() {
         else setLayoutPresets([]);
 
         const savedGallery = localStorage.getItem('vibrant-bohr-gallery');
-        if (savedGallery) setTemplateGallery(JSON.parse(savedGallery));
-        else setTemplateGallery([]);
+        if (savedGallery) {
+          const parsed = JSON.parse(savedGallery);
+          if (Array.isArray(parsed)) {
+            setTemplateGallery({ "": parsed });
+          } else {
+            setTemplateGallery(parsed);
+          }
+        } else {
+          setTemplateGallery({});
+        }
       }
     };
     loadData();
@@ -97,7 +112,7 @@ function App() {
     }
   };
 
-  const saveGallery = async (newGallery: string[]) => {
+  const saveGallery = async (newGallery: Record<string, string[]>) => {
     setTemplateGallery(newGallery);
     try {
       localStorage.setItem('vibrant-bohr-gallery', JSON.stringify(newGallery));
@@ -113,6 +128,7 @@ function App() {
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
+    setActiveGalleryTab(selectedPresetId);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +136,12 @@ function App() {
     if (file && activePosterId) {
       resizeAndBase64(file, (base64) => {
         setPosterImages(prev => ({ ...prev, [activePosterId]: base64 }));
-        saveGallery(templateGallery.includes(base64) ? templateGallery : [...templateGallery, base64]);
+        const currentImages = templateGallery[activeGalleryTab] || [];
+        const updatedImages = currentImages.includes(base64) ? currentImages : [...currentImages, base64];
+        saveGallery({
+          ...templateGallery,
+          [activeGalleryTab]: updatedImages
+        });
       });
     }
     setActivePosterId(null);
@@ -195,6 +216,11 @@ function App() {
                     if (confirm("このテンプレートを削除しますか？")) {
                       const updatedPresets = layoutPresets.filter(p => p.id !== selectedPresetId);
                       savePresets(updatedPresets);
+                      
+                      const updatedGallery = { ...templateGallery };
+                      delete updatedGallery[selectedPresetId];
+                      saveGallery(updatedGallery);
+
                       setSelectedPresetId('');
                       setPosterImages({});
                     }
@@ -238,7 +264,10 @@ function App() {
           </div>
 
           <button 
-            onClick={() => setIsTemplateSettingsOpen(true)}
+            onClick={() => {
+              setActiveGalleryTab(selectedPresetId);
+              setIsTemplateSettingsOpen(true);
+            }}
             className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200 text-purple-700 font-medium hover:bg-purple-100 transition-colors text-sm sm:text-base whitespace-nowrap"
           >
             画像一覧
@@ -292,20 +321,55 @@ function App() {
               <h3 className="text-lg font-bold text-gray-800">画像を変更</h3>
               <p className="text-sm text-gray-500 mt-1">テンプレートから選ぶか、画像をアップロードしてください</p>
             </div>
-            
-            <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-48 p-1">
-              {templateGallery.map((templateUrl) => (
+
+            {/* Folder Tabs */}
+            <div className="flex border-b border-gray-200 overflow-x-auto gap-2 pb-2 scrollbar-thin">
+              <button
+                type="button"
+                onClick={() => setActiveGalleryTab('')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${
+                  activeGalleryTab === '' 
+                    ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                初期状態
+              </button>
+              {layoutPresets.map((preset) => (
                 <button
-                  key={templateUrl}
-                  onClick={() => {
-                    setPosterImages(prev => ({ ...prev, [activePosterId]: templateUrl }));
-                    setActivePosterId(null);
-                  }}
-                  className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 hover:border-blue-500 hover:shadow-md transition-all active:scale-95 bg-gray-50"
+                  key={preset.id}
+                  type="button"
+                  onClick={() => setActiveGalleryTab(preset.id)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${
+                    activeGalleryTab === preset.id 
+                      ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-sm' 
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
                 >
-                  <img src={templateUrl} alt="template" className="w-full h-full object-cover" />
+                  {preset.name}
                 </button>
               ))}
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-48 p-1">
+              {(templateGallery[activeGalleryTab] || []).length > 0 ? (
+                (templateGallery[activeGalleryTab] || []).map((templateUrl) => (
+                  <button
+                    key={templateUrl}
+                    onClick={() => {
+                      setPosterImages(prev => ({ ...prev, [activePosterId]: templateUrl }));
+                      setActivePosterId(null);
+                    }}
+                    className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 hover:border-blue-500 hover:shadow-md transition-all active:scale-95 bg-gray-50"
+                  >
+                    <img src={templateUrl} alt="template" className="w-full h-full object-cover" />
+                  </button>
+                ))
+              ) : (
+                <div className="col-span-full py-8 text-center text-sm text-gray-400">
+                  このフォルダに画像はありません。アップロードしてください。
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-3">
@@ -353,26 +417,68 @@ function App() {
           <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-3xl flex flex-col gap-6">
             <div className="text-center">
               <h3 className="text-lg font-bold text-gray-800">テンプレート設定</h3>
-              <p className="text-sm text-gray-500 mt-1">ポスターに使える画像を管理します</p>
+              <p className="text-sm text-gray-500 mt-1">ポスターに使える画像をフォルダ（テンプレート）ごとに管理します</p>
+            </div>
+
+            {/* Folder Tabs */}
+            <div className="flex border-b border-gray-200 overflow-x-auto gap-2 pb-2 scrollbar-thin">
+              <button
+                type="button"
+                onClick={() => setActiveGalleryTab('')}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all whitespace-nowrap ${
+                  activeGalleryTab === '' 
+                    ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-sm' 
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                初期状態
+              </button>
+              {layoutPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => setActiveGalleryTab(preset.id)}
+                  className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-all whitespace-nowrap ${
+                    activeGalleryTab === preset.id 
+                      ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-sm' 
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {preset.name}
+                </button>
+              ))}
             </div>
             
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 overflow-y-auto max-h-[60vh] p-1">
-              {templateGallery.map((templateUrl, idx) => (
-                <div key={idx} className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50 group">
-                  <img src={templateUrl} alt="template" className="w-full h-full object-cover" />
-                  <button 
-                    onClick={() => saveGallery(templateGallery.filter((_, i) => i !== idx))}
-                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-                  >
-                    ✕
-                  </button>
+              {(templateGallery[activeGalleryTab] || []).length > 0 ? (
+                (templateGallery[activeGalleryTab] || []).map((templateUrl, idx) => (
+                  <div key={idx} className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50 group">
+                    <img src={templateUrl} alt="template" className="w-full h-full object-cover" />
+                    <button 
+                      onClick={() => {
+                        const currentImages = templateGallery[activeGalleryTab] || [];
+                        const updatedImages = currentImages.filter((_, i) => i !== idx);
+                        saveGallery({
+                          ...templateGallery,
+                          [activeGalleryTab]: updatedImages
+                        });
+                      }}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center text-sm text-gray-400">
+                  このフォルダに画像はありません。アップロードしてください。
                 </div>
-              ))}
+              )}
             </div>
 
             <div className="flex flex-col gap-3">
               <label className="w-full flex items-center justify-center gap-2 cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors shadow-sm active:scale-95">
-                <span>画像を追加</span>
+                <span>このフォルダに画像を追加</span>
                 <input 
                   type="file" 
                   className="hidden" 
@@ -381,7 +487,12 @@ function App() {
                     const file = e.target.files?.[0];
                     if (file) {
                       resizeAndBase64(file, (base64) => {
-                        saveGallery(templateGallery.includes(base64) ? templateGallery : [...templateGallery, base64]);
+                        const currentImages = templateGallery[activeGalleryTab] || [];
+                        const updatedImages = currentImages.includes(base64) ? currentImages : [...currentImages, base64];
+                        saveGallery({
+                          ...templateGallery,
+                          [activeGalleryTab]: updatedImages
+                        });
                       });
                     }
                   }} 
