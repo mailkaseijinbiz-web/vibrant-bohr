@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { Booth } from './components/Booth'
@@ -7,7 +7,6 @@ function App() {
   const [showDimensions, setShowDimensions] = useState(false);
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);

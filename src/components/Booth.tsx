@@ -50,7 +50,7 @@ function CustomPoster({ position, rotation, args, imageUrl, onClick, text }: { p
         <meshStandardMaterial color={texture ? "#ffffff" : "#d4d4d4"} map={texture || null} roughness={0.9} />
       </mesh>
       {!texture && (
-        <Text position={[0, 0, args[2] + 0.001]} fontSize={0.15} color="#ffffff" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf" pointerEvents="none">
+        <Text position={[0, 0, args[2] + 0.001]} fontSize={0.15} color="#ffffff" font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf">
           {text}
         </Text>
       )}
@@ -64,7 +64,6 @@ interface BoothProps {
   onPosterClick?: (id: string) => void;
 }
 
-export function Booth({ showDimensions = false, posterImages = {}, onPosterClick }: BoothProps) {
 const rightCounterX = dimensions.totalWidth / 2 - dimensions.rightCounterWidth / 2;
 const leftCounterX = -dimensions.totalWidth / 2 + dimensions.leftCounterWidth / 2;
 
@@ -405,7 +404,7 @@ function DimensionsOverlay() {
   );
 }
 
-export function Booth({ showDimensions = false }: { showDimensions?: boolean }) {
+export function Booth({ showDimensions = false, posterImages = {}, onPosterClick }: BoothProps) {
   const zDepthLeftRight = dimensions.totalDepth - dimensions.frontCounterDepth;
   const zPosLeftRight = -dimensions.frontCounterDepth - zDepthLeftRight / 2;
 
