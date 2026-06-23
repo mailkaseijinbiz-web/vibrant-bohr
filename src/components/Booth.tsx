@@ -382,17 +382,18 @@ interface SignboardProps {
   position: [number, number, number];
   rotation: number; // Y rotation in radians
   imageUrl?: string;
+  backImageUrl?: string;
   onPosterClick?: (id: string) => void;
 }
 
-function Signboard({ position, rotation, imageUrl, onPosterClick }: SignboardProps) {
+function Signboard({ position, rotation, imageUrl, backImageUrl, onPosterClick }: SignboardProps) {
   const theta = 0.225; // 12.9 degrees angle matching 380mm opening for 850mm height
   const height = 0.828; // vertical height to top hinge
   
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       {/* Front Frame */}
-      <group position={[0, height, 0]} rotation={[theta, 0, 0]}>
+      <group position={[0, height, 0]} rotation={[-theta, 0, 0]}>
         {/* Left Leg */}
         <mesh position={[-0.235, -0.425, 0]}>
           <boxGeometry args={[0.03, 0.85, 0.02]} />
@@ -423,7 +424,7 @@ function Signboard({ position, rotation, imageUrl, onPosterClick }: SignboardPro
           <boxGeometry args={[0.44, 0.55, 0.005]} />
           <meshStandardMaterial color="#1c1c1c" roughness={0.9} />
         </mesh>
-        {/* Custom Poster on Signboard */}
+        {/* Custom Poster on Signboard (Front) */}
         <CustomPoster 
           position={[0, -0.325, 0.008]}
           args={[0.40, 0.53, 0.002]} // Fits chalkboard area nicely
@@ -437,7 +438,7 @@ function Signboard({ position, rotation, imageUrl, onPosterClick }: SignboardPro
       </group>
 
       {/* Back Frame */}
-      <group position={[0, height, 0]} rotation={[-theta, 0, 0]}>
+      <group position={[0, height, 0]} rotation={[-theta, Math.PI, 0]}>
         {/* Left Leg */}
         <mesh position={[-0.235, -0.425, 0]}>
           <boxGeometry args={[0.03, 0.85, 0.02]} />
@@ -453,11 +454,32 @@ function Signboard({ position, rotation, imageUrl, onPosterClick }: SignboardPro
           <boxGeometry args={[0.44, 0.05, 0.02]} />
           <meshStandardMaterial color="#2d221a" roughness={0.8} />
         </mesh>
-        {/* Bottom Rail */}
-        <mesh position={[0, -0.725, 0]}>
+        {/* Middle Rail */}
+        <mesh position={[0, -0.625, 0]}>
           <boxGeometry args={[0.44, 0.05, 0.02]} />
           <meshStandardMaterial color="#2d221a" roughness={0.8} />
         </mesh>
+        {/* Bottom Rail */}
+        <mesh position={[0, -0.725, 0]}>
+          <boxGeometry args={[0.44, 0.03, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Blackboard board */}
+        <mesh position={[0, -0.325, 0.005]}>
+          <boxGeometry args={[0.44, 0.55, 0.005]} />
+          <meshStandardMaterial color="#1c1c1c" roughness={0.9} />
+        </mesh>
+        {/* Custom Poster on Signboard (Back) */}
+        <CustomPoster 
+          position={[0, -0.325, 0.008]}
+          args={[0.40, 0.53, 0.002]} // Fits chalkboard area nicely
+          imageUrl={backImageUrl}
+          onClick={(e) => { e.stopPropagation(); onPosterClick?.('signboard-back'); }}
+          text="A2"
+          bgColor="#1c1c1c"
+          textColor="#ffffff"
+          fontSize={0.06}
+        />
       </group>
 
       {/* Middle Shelf */}
@@ -916,6 +938,7 @@ export function Booth({
           position={[signboardX, 0, signboardZ]} 
           rotation={signboardRotation * Math.PI / 180} // convert degrees to radians
           imageUrl={posterImages['signboard']}
+          backImageUrl={posterImages['signboard-back']}
           onPosterClick={onPosterClick}
         />
       )}
