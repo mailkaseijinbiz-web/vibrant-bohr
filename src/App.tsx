@@ -9,6 +9,10 @@ type LayoutPreset = {
   images: Record<string, string>;
   posterCount?: 4 | 5;
   signPattern?: 'banner' | 'noren';
+  showSignboard?: boolean;
+  signboardX?: number;
+  signboardZ?: number;
+  signboardRotation?: number;
 };
 
 const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
@@ -51,6 +55,10 @@ function App() {
   const [posterCount, setPosterCount] = useState<4 | 5>(4);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [signPattern, setSignPattern] = useState<'banner' | 'noren'>('banner');
+  const [showSignboard, setShowSignboard] = useState<boolean>(true);
+  const [signboardX, setSignboardX] = useState<number>(1.2);
+  const [signboardZ, setSignboardZ] = useState<number>(-0.6);
+  const [signboardRotation, setSignboardRotation] = useState<number>(45);
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
@@ -79,6 +87,34 @@ function App() {
       console.warn("Failed to save gallery to server", e);
     }
   };
+
+  // Auto-save initial unsaved signboard state to localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('vibrant-bohr-active-signboard');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.showSignboard !== undefined) setShowSignboard(parsed.showSignboard);
+        if (parsed.signboardX !== undefined) setSignboardX(parsed.signboardX);
+        if (parsed.signboardZ !== undefined) setSignboardZ(parsed.signboardZ);
+        if (parsed.signboardRotation !== undefined) setSignboardRotation(parsed.signboardRotation);
+      } catch (e) {
+        console.warn("Failed to load active signboard settings", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only auto-save to localStorage if we are in the "初期状態" (unsaved state)
+    if (!selectedPresetId) {
+      localStorage.setItem('vibrant-bohr-active-signboard', JSON.stringify({
+        showSignboard,
+        signboardX,
+        signboardZ,
+        signboardRotation
+      }));
+    }
+  }, [showSignboard, signboardX, signboardZ, signboardRotation, selectedPresetId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -194,11 +230,36 @@ function App() {
                     setPosterImages(preset.images);
                     setPosterCount(preset.posterCount || 4);
                     setSignPattern(preset.signPattern || 'banner');
+                    setShowSignboard(preset.showSignboard !== undefined ? preset.showSignboard : true);
+                    setSignboardX(preset.signboardX !== undefined ? preset.signboardX : 1.2);
+                    setSignboardZ(preset.signboardZ !== undefined ? preset.signboardZ : -0.6);
+                    setSignboardRotation(preset.signboardRotation !== undefined ? preset.signboardRotation : 45);
                   }
                 } else {
                   setPosterImages({});
                   setPosterCount(4);
                   setSignPattern('banner');
+                  // Revert to local storage auto-saved initial state or default values
+                  const saved = localStorage.getItem('vibrant-bohr-active-signboard');
+                  if (saved) {
+                    try {
+                      const parsed = JSON.parse(saved);
+                      setShowSignboard(parsed.showSignboard !== undefined ? parsed.showSignboard : true);
+                      setSignboardX(parsed.signboardX !== undefined ? parsed.signboardX : 1.2);
+                      setSignboardZ(parsed.signboardZ !== undefined ? parsed.signboardZ : -0.6);
+                      setSignboardRotation(parsed.signboardRotation !== undefined ? parsed.signboardRotation : 45);
+                    } catch (e) {
+                      setShowSignboard(true);
+                      setSignboardX(1.2);
+                      setSignboardZ(-0.6);
+                      setSignboardRotation(45);
+                    }
+                  } else {
+                    setShowSignboard(true);
+                    setSignboardX(1.2);
+                    setSignboardZ(-0.6);
+                    setSignboardRotation(45);
+                  }
                 }
               }}
               className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer max-w-[120px] sm:max-w-none"
@@ -215,7 +276,16 @@ function App() {
                   onClick={() => {
                     if (confirm("現在の表示状態（ポスター・ロゴの組み合わせ）でこのテンプレートを上書き保存しますか？")) {
                       const updatedPresets = layoutPresets.map(p => 
-                        p.id === selectedPresetId ? { ...p, images: { ...posterImages }, posterCount, signPattern } : p
+                        p.id === selectedPresetId ? { 
+                          ...p, 
+                          images: { ...posterImages }, 
+                          posterCount, 
+                          signPattern,
+                          showSignboard,
+                          signboardX,
+                          signboardZ,
+                          signboardRotation
+                        } : p
                       );
                       savePresets(updatedPresets);
                     }
@@ -270,7 +340,17 @@ function App() {
                 onClick={() => {
                   const name = prompt("新しいテンプレート名を入力してください", `設定 ${layoutPresets.length + 1}`);
                   if (name) {
-                    const newPreset: LayoutPreset = { id: Date.now().toString(), name, images: { ...posterImages }, posterCount, signPattern };
+                    const newPreset: LayoutPreset = { 
+                      id: Date.now().toString(), 
+                      name, 
+                      images: { ...posterImages }, 
+                      posterCount, 
+                      signPattern,
+                      showSignboard,
+                      signboardX,
+                      signboardZ,
+                      signboardRotation
+                    };
                     savePresets([...layoutPresets, newPreset]);
                     setSelectedPresetId(newPreset.id);
                   }
@@ -356,6 +436,73 @@ function App() {
                     </button>
                   </div>
 
+                  {/* 立て看板設定 */}
+                  <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+                    <span className="text-xs font-semibold text-gray-500">立て看板の設定</span>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700 font-medium">
+                      <input 
+                        type="checkbox" 
+                        checked={showSignboard} 
+                        onChange={(e) => setShowSignboard(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      <span>看板を表示する</span>
+                    </label>
+                    
+                    {showSignboard && (
+                      <div className="flex flex-col gap-2.5 mt-1 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                        {/* X slider */}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex justify-between text-xs text-gray-600">
+                            <span>左右位置 (X)</span>
+                            <span className="font-semibold">{signboardX.toFixed(2)}m</span>
+                          </div>
+                          <input 
+                            type="range" 
+                            min="-3.0" 
+                            max="3.0" 
+                            step="0.05"
+                            value={signboardX}
+                            onChange={(e) => setSignboardX(parseFloat(e.target.value))}
+                            className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+                        {/* Z slider */}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex justify-between text-xs text-gray-600">
+                            <span>前後位置 (Z)</span>
+                            <span className="font-semibold">{signboardZ.toFixed(2)}m</span>
+                          </div>
+                          <input 
+                            type="range" 
+                            min="-4.0" 
+                            max="1.0" 
+                            step="0.05"
+                            value={signboardZ}
+                            onChange={(e) => setSignboardZ(parseFloat(e.target.value))}
+                            className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+                        {/* Rotation slider */}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex justify-between text-xs text-gray-600">
+                            <span>回転角度 (Y)</span>
+                            <span className="font-semibold">{signboardRotation}°</span>
+                          </div>
+                          <input 
+                            type="range" 
+                            min="-180" 
+                            max="180" 
+                            step="5"
+                            value={signboardRotation}
+                            onChange={(e) => setSignboardRotation(parseInt(e.target.value))}
+                            className="w-full accent-blue-600 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* 3. 寸法表示 */}
                   <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
                     <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
@@ -389,6 +536,10 @@ function App() {
               onPosterClick={handlePosterClick}
               posterCount={posterCount}
               signPattern={signPattern}
+              showSignboard={showSignboard}
+              signboardX={signboardX}
+              signboardZ={signboardZ}
+              signboardRotation={signboardRotation}
             />
             
             {/* Ground / Shadows */}

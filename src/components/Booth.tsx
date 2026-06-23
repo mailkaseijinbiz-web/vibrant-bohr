@@ -71,6 +71,10 @@ interface BoothProps {
   onPosterClick?: (id: string) => void;
   posterCount?: 4 | 5;
   signPattern?: 'banner' | 'noren';
+  showSignboard?: boolean;
+  signboardX?: number;
+  signboardZ?: number;
+  signboardRotation?: number;
 }
 
 function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
@@ -374,6 +378,97 @@ function HotShowcase({ position, rotation }: { position: [number, number, number
     </group>
   );
 }
+interface SignboardProps {
+  position: [number, number, number];
+  rotation: number; // Y rotation in radians
+  imageUrl?: string;
+  onPosterClick?: (id: string) => void;
+}
+
+function Signboard({ position, rotation, imageUrl, onPosterClick }: SignboardProps) {
+  const theta = 0.225; // 12.9 degrees angle matching 380mm opening for 850mm height
+  const height = 0.828; // vertical height to top hinge
+  
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      {/* Front Frame */}
+      <group position={[0, height, 0]} rotation={[theta, 0, 0]}>
+        {/* Left Leg */}
+        <mesh position={[-0.235, -0.425, 0]}>
+          <boxGeometry args={[0.03, 0.85, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Right Leg */}
+        <mesh position={[0.235, -0.425, 0]}>
+          <boxGeometry args={[0.03, 0.85, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Top Rail */}
+        <mesh position={[0, -0.025, 0]}>
+          <boxGeometry args={[0.44, 0.05, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Middle Rail */}
+        <mesh position={[0, -0.625, 0]}>
+          <boxGeometry args={[0.44, 0.05, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Bottom Rail */}
+        <mesh position={[0, -0.725, 0]}>
+          <boxGeometry args={[0.44, 0.03, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Blackboard board */}
+        <mesh position={[0, -0.325, 0.005]}>
+          <boxGeometry args={[0.44, 0.55, 0.005]} />
+          <meshStandardMaterial color="#1c1c1c" roughness={0.9} />
+        </mesh>
+        {/* Custom Poster on Signboard */}
+        <CustomPoster 
+          position={[0, -0.325, 0.008]}
+          args={[0.40, 0.53, 0.002]} // Fits chalkboard area nicely
+          imageUrl={imageUrl}
+          onClick={(e) => { e.stopPropagation(); onPosterClick?.('signboard'); }}
+          text="A2"
+          bgColor="#1c1c1c"
+          textColor="#ffffff"
+          fontSize={0.06}
+        />
+      </group>
+
+      {/* Back Frame */}
+      <group position={[0, height, 0]} rotation={[-theta, 0, 0]}>
+        {/* Left Leg */}
+        <mesh position={[-0.235, -0.425, 0]}>
+          <boxGeometry args={[0.03, 0.85, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Right Leg */}
+        <mesh position={[0.235, -0.425, 0]}>
+          <boxGeometry args={[0.03, 0.85, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Top Rail */}
+        <mesh position={[0, -0.025, 0]}>
+          <boxGeometry args={[0.44, 0.05, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+        {/* Bottom Rail */}
+        <mesh position={[0, -0.725, 0]}>
+          <boxGeometry args={[0.44, 0.05, 0.02]} />
+          <meshStandardMaterial color="#2d221a" roughness={0.8} />
+        </mesh>
+      </group>
+
+      {/* Middle Shelf */}
+      <mesh position={[0, 0.20, 0]}>
+        <boxGeometry args={[0.44, 0.015, 0.28]} />
+        <meshStandardMaterial color="#2d221a" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
 
 function DimensionLine({ start, end, label, offset = [0, 0, 0] }: { start: number[], end: number[], label: string, offset?: number[] }) {
   const mid = [
@@ -468,7 +563,17 @@ function DimensionsOverlay() {
   );
 }
 
-export function Booth({ showDimensions = false, posterImages = {}, onPosterClick, posterCount = 4, signPattern = 'banner' }: BoothProps) {
+export function Booth({
+  showDimensions = false,
+  posterImages = {},
+  onPosterClick,
+  posterCount = 4,
+  signPattern = 'banner',
+  showSignboard = true,
+  signboardX = 1.2,
+  signboardZ = -0.6,
+  signboardRotation = 45
+}: BoothProps) {
   const zDepthLeftRight = dimensions.totalDepth - dimensions.frontCounterDepth;
   const zPosLeftRight = -dimensions.frontCounterDepth - zDepthLeftRight / 2;
 
@@ -804,6 +909,16 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
         position={[leftCounterX, dimensions.baseHeight, -2.1]} 
         rotation={[0, -Math.PI / 2, 0]} 
       />
+
+      {/* Signboard (立て看板) */}
+      {showSignboard && (
+        <Signboard 
+          position={[signboardX, 0, signboardZ]} 
+          rotation={signboardRotation * Math.PI / 180} // convert degrees to radians
+          imageUrl={posterImages['signboard']}
+          onPosterClick={onPosterClick}
+        />
+      )}
     </group>
   );
 }
