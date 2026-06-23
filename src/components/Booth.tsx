@@ -165,16 +165,28 @@ function Arch({ z }: { z: number }) {
 
   return (
     <group>
-      {/* Left Pole */}
-      <mesh position={[leftPoleX, dimensions.baseHeight + leftPoleH / 2, z]}>
-        <cylinderGeometry args={[0.015, 0.015, leftPoleH, 16]} />
-        <meshStandardMaterial color={colors.metal} metalness={0.8} roughness={0.2} />
-      </mesh>
-      {/* Right Pole */}
-      <mesh position={[rightPoleX, dimensions.baseHeight + rightPoleH / 2, z]}>
-        <cylinderGeometry args={[0.015, 0.015, rightPoleH, 16]} />
-        <meshStandardMaterial color={colors.metal} metalness={0.8} roughness={0.2} />
-      </mesh>
+      {/* Left Pole (Extended to cabinet bottom shelf) */}
+      {(() => {
+        const totalPoleH = leftPoleH + (dimensions.baseHeight - dimensions.wheelHeight);
+        const poleY = dimensions.wheelHeight + totalPoleH / 2;
+        return (
+          <mesh position={[leftPoleX, poleY, z]}>
+            <cylinderGeometry args={[0.012, 0.012, totalPoleH, 16]} />
+            <meshStandardMaterial color={colors.metal} metalness={0.8} roughness={0.2} />
+          </mesh>
+        );
+      })()}
+      {/* Right Pole (Extended to cabinet bottom shelf) */}
+      {(() => {
+        const totalPoleH = rightPoleH + (dimensions.baseHeight - dimensions.wheelHeight);
+        const poleY = dimensions.wheelHeight + totalPoleH / 2;
+        return (
+          <mesh position={[rightPoleX, poleY, z]}>
+            <cylinderGeometry args={[0.012, 0.012, totalPoleH, 16]} />
+            <meshStandardMaterial color={colors.metal} metalness={0.8} roughness={0.2} />
+          </mesh>
+        );
+      })()}
       {/* Arch Tube */}
       <mesh>
         <tubeGeometry args={[curvePath, 40, 0.015, 8, false]} />
@@ -461,33 +473,137 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
 
   return (
     <group>
-      {/* Front Base */}
-      <mesh position={[0, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.frontCounterDepth / 2]}>
-        <boxGeometry args={[dimensions.totalWidth, dimensions.woodHeight, dimensions.frontCounterDepth]} />
-        <meshStandardMaterial color={colors.wood} />
-      </mesh>
+      {/* Front Base (Hollow Cabinet with Shelves) */}
+      <group position={[0, dimensions.wheelHeight, -dimensions.frontCounterDepth / 2]}>
+        {/* Front Panel (facing customer at Z = +frontCounterDepth / 2) */}
+        <mesh position={[0, dimensions.woodHeight / 2, dimensions.frontCounterDepth / 2 - 0.0075]}>
+          <boxGeometry args={[dimensions.totalWidth, dimensions.woodHeight, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Left Side Panel */}
+        <mesh position={[-dimensions.totalWidth / 2 + 0.0075, dimensions.woodHeight / 2, -0.0075]}>
+          <boxGeometry args={[0.015, dimensions.woodHeight, dimensions.frontCounterDepth - 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Right Side Panel */}
+        <mesh position={[dimensions.totalWidth / 2 - 0.0075, dimensions.woodHeight / 2, -0.0075]}>
+          <boxGeometry args={[0.015, dimensions.woodHeight, dimensions.frontCounterDepth - 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Bottom Board */}
+        <mesh position={[0, 0.0075, -0.0075]}>
+          <boxGeometry args={[dimensions.totalWidth - 0.03, 0.015, dimensions.frontCounterDepth - 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Middle Vertical Divider */}
+        <mesh position={[0, 0.015 + (dimensions.woodHeight - 0.015) / 2, -0.0075]}>
+          <boxGeometry args={[0.015, dimensions.woodHeight - 0.015, dimensions.frontCounterDepth - 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Middle Shelf (at H700 from floor, which is Y = 0.70m from floor. Y inside group is Y_local = 0.70 - wheelHeight = 0.70 - 0.095 = 0.605m) */}
+        <mesh position={[0, 0.605, -0.0075]}>
+          <boxGeometry args={[dimensions.totalWidth - 0.03, 0.015, dimensions.frontCounterDepth - 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+      </group>
       {/* Front Top */}
       <mesh position={[0, dimensions.baseHeight - dimensions.topThickness / 2, -dimensions.frontCounterDepth / 2]}>
         <boxGeometry args={[dimensions.totalWidth + 0.02, dimensions.topThickness, dimensions.frontCounterDepth + 0.02]} />
         <meshStandardMaterial color={colors.top} />
       </mesh>
 
-      {/* Right Base */}
-      <mesh position={[rightCounterX, dimensions.wheelHeight + dimensions.woodHeight / 2, zPosLeftRight]}>
-        <boxGeometry args={[dimensions.rightCounterWidth, dimensions.woodHeight, zDepthLeftRight]} />
-        <meshStandardMaterial color={colors.wood} />
-      </mesh>
+      {/* Right Base (Hollow Cabinet with Shelves) */}
+      <group position={[rightCounterX, dimensions.wheelHeight, zPosLeftRight]}>
+        {/* Outer Panel (facing outside at X = +rightCounterWidth / 2) */}
+        <mesh position={[dimensions.rightCounterWidth / 2 - 0.0075, dimensions.woodHeight / 2, 0]}>
+          <boxGeometry args={[0.015, dimensions.woodHeight, zDepthLeftRight]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Front End Panel */}
+        <mesh position={[-0.0075, dimensions.woodHeight / 2, zDepthLeftRight / 2 - 0.0075]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, dimensions.woodHeight, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Back End Panel */}
+        <mesh position={[-0.0075, dimensions.woodHeight / 2, -zDepthLeftRight / 2 + 0.0075]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, dimensions.woodHeight, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Bottom Board */}
+        <mesh position={[-0.0075, 0.0075, 0]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, zDepthLeftRight]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Middle Horizontal Shelf (at H570 from bottom board, which is Y_local = 0.015 + 0.57 = 0.585m) */}
+        <mesh position={[-0.0075, 0.585, 0]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, zDepthLeftRight - 0.03]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Divider 1 (between front and middle compartments, Z_local = 0.1875) */}
+        <mesh position={[-0.0075, 0.015 + (dimensions.woodHeight - 0.015) / 2, 0.1875]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, dimensions.woodHeight - 0.015, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Divider 2 (between middle and back compartments, Z_local = -0.6075) */}
+        <mesh position={[-0.0075, 0.015 + (dimensions.woodHeight - 0.015) / 2, -0.6075]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, dimensions.woodHeight - 0.015, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Small shelf in the back compartment (at 160mm above middle shelf, Y_local = 0.76m, Z_local = -0.79125m) */}
+        <mesh position={[-0.0075, 0.76, -0.79125]}>
+          <boxGeometry args={[dimensions.rightCounterWidth - 0.015, 0.015, 0.34]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+      </group>
       {/* Right Top */}
       <mesh position={[rightCounterX, dimensions.baseHeight - dimensions.topThickness / 2, zPosLeftRight]}>
         <boxGeometry args={[dimensions.rightCounterWidth + 0.02, dimensions.topThickness, zDepthLeftRight + 0.02]} />
         <meshStandardMaterial color={colors.top} />
       </mesh>
 
-      {/* Left Base */}
-      <mesh position={[leftCounterX, dimensions.wheelHeight + dimensions.woodHeight / 2, zPosLeftRight]}>
-        <boxGeometry args={[dimensions.leftCounterWidth, dimensions.woodHeight, zDepthLeftRight]} />
-        <meshStandardMaterial color={colors.wood} />
-      </mesh>
+      {/* Left Base (Hollow Cabinet with Shelves - Mirrored) */}
+      <group position={[leftCounterX, dimensions.wheelHeight, zPosLeftRight]}>
+        {/* Outer Panel (facing outside at X = -leftCounterWidth / 2) */}
+        <mesh position={[-dimensions.leftCounterWidth / 2 + 0.0075, dimensions.woodHeight / 2, 0]}>
+          <boxGeometry args={[0.015, dimensions.woodHeight, zDepthLeftRight]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Front End Panel */}
+        <mesh position={[0.0075, dimensions.woodHeight / 2, zDepthLeftRight / 2 - 0.0075]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, dimensions.woodHeight, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Back End Panel */}
+        <mesh position={[0.0075, dimensions.woodHeight / 2, -zDepthLeftRight / 2 + 0.0075]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, dimensions.woodHeight, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Bottom Board */}
+        <mesh position={[0.0075, 0.0075, 0]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, zDepthLeftRight]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Middle Horizontal Shelf (at H570 from bottom board, which is Y_local = 0.015 + 0.57 = 0.585m) */}
+        <mesh position={[0.0075, 0.585, 0]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, zDepthLeftRight - 0.03]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Divider 1 (between front and middle compartments, Z_local = 0.1875) */}
+        <mesh position={[0.0075, 0.015 + (dimensions.woodHeight - 0.015) / 2, 0.1875]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, dimensions.woodHeight - 0.015, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Divider 2 (between middle and back compartments, Z_local = -0.6075) */}
+        <mesh position={[0.0075, 0.015 + (dimensions.woodHeight - 0.015) / 2, -0.6075]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, dimensions.woodHeight - 0.015, 0.015]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+        {/* Small shelf in the back compartment (at 160mm above middle shelf, Y_local = 0.76m, Z_local = -0.79125m) */}
+        <mesh position={[0.0075, 0.76, -0.79125]}>
+          <boxGeometry args={[dimensions.leftCounterWidth - 0.015, 0.015, 0.34]} />
+          <meshStandardMaterial color={colors.wood} roughness={0.7} />
+        </mesh>
+      </group>
       {/* Left Base Punched Metal */}
       <mesh position={[leftPoleX - 0.001, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[dimensions.totalDepth, dimensions.woodHeight]} />
