@@ -333,8 +333,8 @@ function HotShowcase({ position, rotation }: { position: [number, number, number
       {/* Internal warm light */}
       <pointLight position={[0, h/2, 0]} color="#ff5500" intensity={2} distance={1} />
 
-      {/* Payment Method Sign on top */}
-      <group position={[0, h + 0.1, d/3]} rotation={[-0.15, 0, 0]}>
+      {/* Payment Method Sign on top (positioned to avoid overlap with noren curtain) */}
+      <group position={[0, h + 0.1, -0.05]} rotation={[-0.15, 0, 0]}>
         <mesh>
           <planeGeometry args={[0.3, 0.2]} />
           <meshStandardMaterial color="#ffffff" roughness={0.8} side={THREE.DoubleSide} />
