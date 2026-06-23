@@ -50,6 +50,25 @@ const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
   reader.readAsDataURL(file);
 };
 
+const uploadImageToServer = async (base64: string): Promise<string> => {
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64 })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.url) {
+        return data.url;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to upload image to server, falling back to base64", e);
+  }
+  return base64;
+};
+
 function App() {
   const [showDimensions, setShowDimensions] = useState(false);
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
@@ -259,12 +278,14 @@ function App() {
     const file = e.target.files?.[0];
     if (file && activePosterId) {
       resizeAndBase64(file, (base64) => {
-        setPosterImages(prev => ({ ...prev, [activePosterId]: base64 }));
-        const currentImages = templateGallery[activeGalleryTab] || [];
-        const updatedImages = currentImages.includes(base64) ? currentImages : [...currentImages, base64];
-        saveGallery({
-          ...templateGallery,
-          [activeGalleryTab]: updatedImages
+        uploadImageToServer(base64).then((imageUrl) => {
+          setPosterImages(prev => ({ ...prev, [activePosterId]: imageUrl }));
+          const currentImages = templateGallery[activeGalleryTab] || [];
+          const updatedImages = currentImages.includes(imageUrl) ? currentImages : [...currentImages, imageUrl];
+          saveGallery({
+            ...templateGallery,
+            [activeGalleryTab]: updatedImages
+          });
         });
       });
     }
@@ -1042,11 +1063,13 @@ function App() {
                     const file = e.target.files?.[0];
                     if (file) {
                       resizeAndBase64(file, (base64) => {
-                        const currentImages = templateGallery[activeGalleryTab] || [];
-                        const updatedImages = currentImages.includes(base64) ? currentImages : [...currentImages, base64];
-                        saveGallery({
-                          ...templateGallery,
-                          [activeGalleryTab]: updatedImages
+                        uploadImageToServer(base64).then((imageUrl) => {
+                          const currentImages = templateGallery[activeGalleryTab] || [];
+                          const updatedImages = currentImages.includes(imageUrl) ? currentImages : [...currentImages, imageUrl];
+                          saveGallery({
+                            ...templateGallery,
+                            [activeGalleryTab]: updatedImages
+                          });
                         });
                       });
                     }
