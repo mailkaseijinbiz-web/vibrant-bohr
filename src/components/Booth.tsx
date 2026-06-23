@@ -118,8 +118,9 @@ function ShavedIceMachine({ position, rotation }: { position: [number, number, n
 const rightCounterX = dimensions.totalWidth / 2 - dimensions.rightCounterWidth / 2;
 const leftCounterX = -dimensions.totalWidth / 2 + dimensions.leftCounterWidth / 2;
 
-const rightPoleX = dimensions.totalWidth / 2;
-const leftPoleX = -dimensions.totalWidth / 2;
+const outerLeftX = -dimensions.totalWidth / 2;
+const rightPoleX = dimensions.totalWidth / 2 - 0.035;
+const leftPoleX = -dimensions.totalWidth / 2 + 0.035;
 
 const polesZ = [
   0,
@@ -615,13 +616,13 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
         </mesh>
       </group>
       {/* Left Base Punched Metal */}
-      <mesh position={[leftPoleX - 0.001, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <mesh position={[outerLeftX - 0.001, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[dimensions.totalDepth, dimensions.woodHeight]} />
         <meshStandardMaterial color={colors.punchedMetal} roughness={0.7} metalness={0.1} />
       </mesh>
       
       {/* Posters on the Left Base (A1, A1, Corkboard) */}
-      <group position={[leftPoleX - 0.002, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
+      <group position={[outerLeftX - 0.002, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
         {/* Left A1 */}
         <CustomPoster 
           position={[-0.65, 0, 0]} 
