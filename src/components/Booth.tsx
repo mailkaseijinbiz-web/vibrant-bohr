@@ -71,6 +71,48 @@ interface BoothProps {
   onPosterClick?: (id: string) => void;
 }
 
+function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Wooden Board (400x600, 10mm thick) */}
+      <mesh position={[0, 0.005, 0]}>
+        <boxGeometry args={[0.4, 0.01, 0.6]} />
+        <meshStandardMaterial color="#cda47b" /> {/* Wood color */}
+      </mesh>
+      
+      {/* Machine Base (White) */}
+      <mesh position={[0, 0.01 + 0.1, 0]}>
+        <boxGeometry args={[0.26, 0.2, 0.34]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.3} />
+      </mesh>
+
+      {/* Spout / Clear Area (where ice falls, 240mm height) */}
+      <mesh position={[0, 0.01 + 0.2 + 0.12, 0.05]}>
+        <boxGeometry args={[0.22, 0.24, 0.2]} />
+        <meshStandardMaterial color="#a0d8ef" transparent opacity={0.3} roughness={0.1} />
+      </mesh>
+
+      {/* Upper Motor Housing (White) */}
+      <mesh position={[0, 0.01 + 0.2 + 0.24 + 0.1, 0]}>
+        <boxGeometry args={[0.28, 0.2, 0.36]} />
+        <meshStandardMaterial color="#ffffff" roughness={0.3} />
+      </mesh>
+
+      {/* Top Hopper / Plate (Silver/Metal) */}
+      <mesh position={[0, 0.01 + 0.2 + 0.24 + 0.2 + 0.02, 0]}>
+        <cylinderGeometry args={[0.1, 0.1, 0.04, 32]} />
+        <meshStandardMaterial color="#dddddd" metalness={0.8} roughness={0.2} />
+      </mesh>
+      
+      {/* Side Handle/Wheel (Black) */}
+      <mesh position={[0.15, 0.01 + 0.2 + 0.24 + 0.1, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.08, 0.08, 0.04, 16]} />
+        <meshStandardMaterial color="#333333" />
+      </mesh>
+    </group>
+  );
+}
+
 const rightCounterX = dimensions.totalWidth / 2 - dimensions.rightCounterWidth / 2;
 const leftCounterX = -dimensions.totalWidth / 2 + dimensions.leftCounterWidth / 2;
 
@@ -552,6 +594,13 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
 
       {/* Dimensions Overlay */}
       {showDimensions && <DimensionsOverlay />}
+
+      {/* Shaved Ice Machine on the Right Counter (Back side) */}
+      {/* Board is 0.4 wide, counter is 0.3. Align outer edges -> offset X by -0.05 from center of counter */}
+      <ShavedIceMachine 
+        position={[rightCounterX - 0.05, dimensions.baseHeight, -2.0]} 
+        rotation={[0, -Math.PI / 2, 0]} 
+      />
 
       {/* 4 A2 Posters standing up from the left arch (facing X-direction) */}
       <group 
