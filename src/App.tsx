@@ -13,7 +13,7 @@ type LayoutPreset = {
   signboardX?: number;
   signboardZ?: number;
   signboardRotation?: number;
-  leftPanelPattern?: 'corkboard' | 'poster';
+  leftPanelPattern?: 'corkboard' | 'poster' | 'a3-grid';
   iceMachineX?: number;
   iceMachineZ?: number;
   iceMachineRotation?: number;
@@ -67,7 +67,7 @@ function App() {
   const [signboardX, setSignboardX] = useState<number>(1.2);
   const [signboardZ, setSignboardZ] = useState<number>(-0.6);
   const [signboardRotation, setSignboardRotation] = useState<number>(45);
-  const [leftPanelPattern, setLeftPanelPattern] = useState<'corkboard' | 'poster'>('corkboard');
+  const [leftPanelPattern, setLeftPanelPattern] = useState<'corkboard' | 'poster' | 'a3-grid'>('corkboard');
   const [iceMachineX, setIceMachineX] = useState<number>(0.925);
   const [iceMachineZ, setIceMachineZ] = useState<number>(-2.0);
   const [iceMachineRotation, setIceMachineRotation] = useState<number>(-90);
@@ -119,7 +119,7 @@ function App() {
       }
     }
     const savedLeftPanel = localStorage.getItem('vibrant-bohr-active-left-panel-pattern');
-    if (savedLeftPanel === 'poster' || savedLeftPanel === 'corkboard') {
+    if (savedLeftPanel === 'poster' || savedLeftPanel === 'corkboard' || savedLeftPanel === 'a3-grid') {
       setLeftPanelPattern(savedLeftPanel);
     }
     const savedLeftFront = localStorage.getItem('vibrant-bohr-active-left-front-panel-pattern');
@@ -327,7 +327,7 @@ function App() {
                     setSignboardRotation(45);
                   }
                   const savedLeftPanel = localStorage.getItem('vibrant-bohr-active-left-panel-pattern');
-                  setLeftPanelPattern(savedLeftPanel === 'poster' ? 'poster' : 'corkboard');
+                  setLeftPanelPattern(savedLeftPanel === 'poster' ? 'poster' : savedLeftPanel === 'a3-grid' ? 'a3-grid' : 'corkboard');
                   
                   const savedLeftFront = localStorage.getItem('vibrant-bohr-active-left-front-panel-pattern');
                   setLeftFrontPanelPattern(savedLeftFront === 'a3-grid' ? 'a3-grid' : 'a1');
@@ -544,38 +544,51 @@ function App() {
                     </div>
                   </div>
 
-                  {/* 左側面・右側パネル */}
+                  {/* 左側面・奥（左側）パネル */}
                   <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
-                    <span className="text-xs font-semibold text-gray-500">左側面・右側パネル</span>
-                    <div className="flex gap-2">
+                    <span className="text-xs font-semibold text-gray-500">左側面・奥（左側）パネル</span>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setLeftPanelPattern('corkboard')}
+                          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                            leftPanelPattern === 'corkboard'
+                              ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          コルクボード
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLeftPanelPattern('poster')}
+                          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                            leftPanelPattern === 'poster'
+                              ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          A1ポスター
+                        </button>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => setLeftPanelPattern('corkboard')}
-                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                          leftPanelPattern === 'corkboard'
+                        onClick={() => setLeftPanelPattern('a3-grid')}
+                        className={`w-full py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                          leftPanelPattern === 'a3-grid'
                             ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
                             : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                         }`}
                       >
-                        コルクボード
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLeftPanelPattern('poster')}
-                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
-                          leftPanelPattern === 'poster'
-                            ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
-                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        A1ポスター
+                        A3横×4 (田の字)
                       </button>
                     </div>
                   </div>
 
-                  {/* 左側面・手前パネル */}
+                  {/* 左側面・手前（右側）パネル */}
                   <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
-                    <span className="text-xs font-semibold text-gray-500">左側面・手前パネル</span>
+                    <span className="text-xs font-semibold text-gray-500">左側面・手前（右側）パネル</span>
                     <div className="flex gap-2">
                       <button
                         type="button"

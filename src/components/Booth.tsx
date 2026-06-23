@@ -75,14 +75,14 @@ interface BoothProps {
   signboardX?: number;
   signboardZ?: number;
   signboardRotation?: number;
-  leftPanelPattern?: 'corkboard' | 'poster';
+  leftFrontPanelPattern?: 'a1' | 'a3-grid';
   iceMachineX?: number;
   iceMachineZ?: number;
   iceMachineRotation?: number;
   showcaseX?: number;
   showcaseZ?: number;
   showcaseRotation?: number;
-  leftFrontPanelPattern?: 'a1' | 'a3-grid';
+  leftPanelPattern?: 'corkboard' | 'poster' | 'a3-grid';
 }
 
 function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
@@ -744,9 +744,9 @@ export function Booth({
         <meshStandardMaterial color={colors.punchedMetal} roughness={0.7} metalness={0.1} />
       </mesh>
       
-      {/* Posters on the Left Base (A1, A1, Corkboard) */}
+      {/* Posters on the Left Base (A1/A3, A1, Corkboard/A1/A3) */}
       <group position={[outerLeftX - 0.002, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
-        {/* Left A1 or A3 Grid */}
+        {/* Left Panel: A1 Poster or A3 Grid */}
         {leftFrontPanelPattern === 'a3-grid' ? (
           <group position={[-0.75, 0, 0]}>
             {/* 2x2 Grid of A3 Landscape (420 x 297 mm) */}
@@ -798,8 +798,40 @@ export function Booth({
           text="A1"
         />
         
-        {/* Right Panel (Corkboard or A1 Poster) */}
-        {leftPanelPattern === 'poster' ? (
+        {/* Right Panel (Corkboard, A1 Poster, or A3 Grid) */}
+        {leftPanelPattern === 'a3-grid' ? (
+          <group position={[0.75, 0, 0]}>
+            {/* 2x2 Grid of A3 Landscape (420 x 297 mm) */}
+            <CustomPoster 
+              position={[-0.21, 0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-right-tl']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-right-tl'); }}
+              text="A3"
+            />
+            <CustomPoster 
+              position={[0.21, 0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-right-tr']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-right-tr'); }}
+              text="A3"
+            />
+            <CustomPoster 
+              position={[-0.21, -0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-right-bl']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-right-bl'); }}
+              text="A3"
+            />
+            <CustomPoster 
+              position={[0.21, -0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-right-br']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-right-br'); }}
+              text="A3"
+            />
+          </group>
+        ) : leftPanelPattern === 'poster' ? (
           <CustomPoster 
             position={[0.65, 0, 0]} 
             args={[0.594, 0.841, 0.002]} 
