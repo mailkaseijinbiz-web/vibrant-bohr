@@ -873,20 +873,57 @@ export function Booth({
         })}
       </group>
 
-      {/* Top Banner (LOGO) */}
+      {/* Top Banner (LOGO) and Support Frame */}
       {signPattern === 'banner' && (
-        <CustomPoster 
-          position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.325, -dimensions.totalDepth / 2]}
-          rotation={[0, -Math.PI / 2, 0]}
-          args={[1.8, 0.6, 0.02]}
-          imageUrl={posterImages['logo']}
-          onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
-          text="LOGO"
-          bgColor="#222222"
-          textColor="#ffffff"
-          fontSize={0.25}
-          letterSpacing={0.1}
-        />
+        <group>
+          {/* Silver support poles (clothesline poles) */}
+          {/* Vertical pole (front, right side when looking from left) */}
+          <mesh 
+            position={[leftPoleX - 0.015, dimensions.baseHeight + (leftPoleH + 1.25) / 2, -dimensions.totalDepth / 2 + 0.9]}
+          >
+            <cylinderGeometry args={[0.015, 0.015, leftPoleH + 1.25, 16]} />
+            <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
+          </mesh>
+
+          {/* Vertical pole (back, left side when looking from left) */}
+          <mesh 
+            position={[leftPoleX - 0.015, dimensions.baseHeight + (leftPoleH + 1.25) / 2, -dimensions.totalDepth / 2 - 0.9]}
+          >
+            <cylinderGeometry args={[0.015, 0.015, leftPoleH + 1.25, 16]} />
+            <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
+          </mesh>
+
+          {/* Bottom horizontal pole */}
+          <mesh 
+            position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.025, -dimensions.totalDepth / 2]}
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <cylinderGeometry args={[0.012, 0.012, 1.83, 16]} />
+            <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
+          </mesh>
+
+          {/* Top horizontal pole */}
+          <mesh 
+            position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.625, -dimensions.totalDepth / 2]}
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <cylinderGeometry args={[0.012, 0.012, 1.83, 16]} />
+            <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
+          </mesh>
+
+          <CustomPoster 
+            position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.325, -dimensions.totalDepth / 2]}
+            rotation={[0, -Math.PI / 2, 0]}
+            args={[1.8, 0.6, 0.02]}
+            imageUrl={posterImages['logo']}
+            onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
+            text="LOGO"
+            bgColor="#222222"
+            textColor="#ffffff"
+            fontSize={0.25}
+            letterSpacing={0.1}
+          />
+        </group>
       )}
 
       {/* Noren (のれん) Pattern */}
