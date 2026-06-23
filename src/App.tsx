@@ -20,6 +20,7 @@ type LayoutPreset = {
   showcaseX?: number;
   showcaseZ?: number;
   showcaseRotation?: number;
+  leftFrontPanelPattern?: 'a1' | 'a3-grid';
 };
 
 const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
@@ -73,6 +74,7 @@ function App() {
   const [showcaseX, setShowcaseX] = useState<number>(-0.975);
   const [showcaseZ, setShowcaseZ] = useState<number>(-2.1);
   const [showcaseRotation, setShowcaseRotation] = useState<number>(-90);
+  const [leftFrontPanelPattern, setLeftFrontPanelPattern] = useState<'a1' | 'a3-grid'>('a1');
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
@@ -120,6 +122,10 @@ function App() {
     if (savedLeftPanel === 'poster' || savedLeftPanel === 'corkboard') {
       setLeftPanelPattern(savedLeftPanel);
     }
+    const savedLeftFront = localStorage.getItem('vibrant-bohr-active-left-front-panel-pattern');
+    if (savedLeftFront === 'a1' || savedLeftFront === 'a3-grid') {
+      setLeftFrontPanelPattern(savedLeftFront);
+    }
     const savedIceMachine = localStorage.getItem('vibrant-bohr-active-ice-machine');
     if (savedIceMachine) {
       try {
@@ -154,6 +160,7 @@ function App() {
         signboardRotation
       }));
       localStorage.setItem('vibrant-bohr-active-left-panel-pattern', leftPanelPattern);
+      localStorage.setItem('vibrant-bohr-active-left-front-panel-pattern', leftFrontPanelPattern);
       localStorage.setItem('vibrant-bohr-active-ice-machine', JSON.stringify({
         iceMachineX,
         iceMachineZ,
@@ -165,7 +172,7 @@ function App() {
         showcaseRotation
       }));
     }
-  }, [showSignboard, signboardX, signboardZ, signboardRotation, leftPanelPattern, iceMachineX, iceMachineZ, iceMachineRotation, showcaseX, showcaseZ, showcaseRotation, selectedPresetId]);
+  }, [showSignboard, signboardX, signboardZ, signboardRotation, leftPanelPattern, leftFrontPanelPattern, iceMachineX, iceMachineZ, iceMachineRotation, showcaseX, showcaseZ, showcaseRotation, selectedPresetId]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -292,6 +299,7 @@ function App() {
                     setShowcaseX(preset.showcaseX !== undefined ? preset.showcaseX : -0.975);
                     setShowcaseZ(preset.showcaseZ !== undefined ? preset.showcaseZ : -2.1);
                     setShowcaseRotation(preset.showcaseRotation !== undefined ? preset.showcaseRotation : -90);
+                    setLeftFrontPanelPattern(preset.leftFrontPanelPattern || 'a1');
                   }
                 } else {
                   setPosterImages({});
@@ -320,6 +328,9 @@ function App() {
                   }
                   const savedLeftPanel = localStorage.getItem('vibrant-bohr-active-left-panel-pattern');
                   setLeftPanelPattern(savedLeftPanel === 'poster' ? 'poster' : 'corkboard');
+                  
+                  const savedLeftFront = localStorage.getItem('vibrant-bohr-active-left-front-panel-pattern');
+                  setLeftFrontPanelPattern(savedLeftFront === 'a3-grid' ? 'a3-grid' : 'a1');
                   
                   const savedIceMachine = localStorage.getItem('vibrant-bohr-active-ice-machine');
                   if (savedIceMachine) {
@@ -387,7 +398,8 @@ function App() {
                           iceMachineRotation,
                           showcaseX,
                           showcaseZ,
-                          showcaseRotation
+                          showcaseRotation,
+                          leftFrontPanelPattern
                         } : p
                       );
                       savePresets(updatedPresets);
@@ -459,7 +471,8 @@ function App() {
                       iceMachineRotation,
                       showcaseX,
                       showcaseZ,
-                      showcaseRotation
+                      showcaseRotation,
+                      leftFrontPanelPattern
                     };
                     savePresets([...layoutPresets, newPreset]);
                     setSelectedPresetId(newPreset.id);
@@ -556,6 +569,35 @@ function App() {
                         }`}
                       >
                         A1ポスター
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 左側面・手前パネル */}
+                  <div className="flex flex-col gap-1.5 border-t border-gray-100 pt-3">
+                    <span className="text-xs font-semibold text-gray-500">左側面・手前パネル</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setLeftFrontPanelPattern('a1')}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                          leftFrontPanelPattern === 'a1'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        A1縦
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLeftFrontPanelPattern('a3-grid')}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                          leftFrontPanelPattern === 'a3-grid'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        A3横×4 (田の字)
                       </button>
                     </div>
                   </div>
@@ -796,6 +838,7 @@ function App() {
               showcaseX={showcaseX}
               showcaseZ={showcaseZ}
               showcaseRotation={showcaseRotation}
+              leftFrontPanelPattern={leftFrontPanelPattern}
             />
             
             {/* Ground / Shadows */}

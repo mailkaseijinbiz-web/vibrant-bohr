@@ -82,6 +82,7 @@ interface BoothProps {
   showcaseX?: number;
   showcaseZ?: number;
   showcaseRotation?: number;
+  leftFrontPanelPattern?: 'a1' | 'a3-grid';
 }
 
 function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
@@ -608,7 +609,8 @@ export function Booth({
   iceMachineRotation = -90,
   showcaseX,
   showcaseZ = -2.1,
-  showcaseRotation = -90
+  showcaseRotation = -90,
+  leftFrontPanelPattern = 'a1'
 }: BoothProps) {
   const zDepthLeftRight = dimensions.totalDepth - dimensions.frontCounterDepth;
   const zPosLeftRight = -dimensions.frontCounterDepth - zDepthLeftRight / 2;
@@ -744,14 +746,48 @@ export function Booth({
       
       {/* Posters on the Left Base (A1, A1, Corkboard) */}
       <group position={[outerLeftX - 0.002, dimensions.wheelHeight + dimensions.woodHeight / 2, -dimensions.totalDepth / 2]} rotation={[0, -Math.PI / 2, 0]}>
-        {/* Left A1 */}
-        <CustomPoster 
-          position={[-0.65, 0, 0]} 
-          args={[0.594, 0.841, 0.002]} 
-          imageUrl={posterImages['a1-left']}
-          onClick={(e) => { e.stopPropagation(); onPosterClick?.('a1-left'); }}
-          text="A1"
-        />
+        {/* Left A1 or A3 Grid */}
+        {leftFrontPanelPattern === 'a3-grid' ? (
+          <group position={[-0.75, 0, 0]}>
+            {/* 2x2 Grid of A3 Landscape (420 x 297 mm) */}
+            <CustomPoster 
+              position={[-0.21, 0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-left-tl']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-left-tl'); }}
+              text="A3"
+            />
+            <CustomPoster 
+              position={[0.21, 0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-left-tr']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-left-tr'); }}
+              text="A3"
+            />
+            <CustomPoster 
+              position={[-0.21, -0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-left-bl']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-left-bl'); }}
+              text="A3"
+            />
+            <CustomPoster 
+              position={[0.21, -0.1485, 0]} 
+              args={[0.42, 0.297, 0.002]} 
+              imageUrl={posterImages['a3-left-br']}
+              onClick={(e) => { e.stopPropagation(); onPosterClick?.('a3-left-br'); }}
+              text="A3"
+            />
+          </group>
+        ) : (
+          <CustomPoster 
+            position={[-0.65, 0, 0]} 
+            args={[0.594, 0.841, 0.002]} 
+            imageUrl={posterImages['a1-left']}
+            onClick={(e) => { e.stopPropagation(); onPosterClick?.('a1-left'); }}
+            text="A1"
+          />
+        )}
         
         {/* Middle A1 */}
         <CustomPoster 
