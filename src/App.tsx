@@ -3,15 +3,6 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { Booth } from './components/Booth'
 
-const generatedTemplates = [
-  '/posters/poster_takoyaki_1782184842429.png',
-  '/posters/poster_negidako_1782184913396.png',
-  '/posters/poster_mentai_1782184922839.png',
-  '/posters/poster_takosen_1782184868897.png',
-  '/posters/poster_drinks_1782184880492.png',
-  '/posters/poster_kakigori_1782184890220.png',
-];
-
 type LayoutPreset = {
   id: string;
   name: string;
@@ -80,22 +71,11 @@ function App() {
         console.log("Fallback to localStorage");
         const savedPresets = localStorage.getItem('vibrant-bohr-presets');
         if (savedPresets) setLayoutPresets(JSON.parse(savedPresets));
-        else setLayoutPresets([{
-          id: 'default',
-          name: 'たこ焼き屋台セット',
-          images: {
-            'a2--1.5': '/posters/poster_takoyaki_1782184842429.png',
-            'a2--0.5': '/posters/poster_negidako_1782184913396.png',
-            'a2-0.5': '/posters/poster_mentai_1782184922839.png',
-            'a2-1.5': '/posters/poster_takosen_1782184868897.png',
-            'a1-left': '/posters/poster_drinks_1782184880492.png',
-            'a1-middle': '/posters/poster_kakigori_1782184890220.png',
-          }
-        }]);
+        else setLayoutPresets([]);
 
         const savedGallery = localStorage.getItem('vibrant-bohr-gallery');
         if (savedGallery) setTemplateGallery(JSON.parse(savedGallery));
-        else setTemplateGallery(generatedTemplates);
+        else setTemplateGallery([]);
       }
     };
     loadData();
@@ -171,7 +151,7 @@ function App() {
             </select>
             
             {selectedPresetId && selectedPresetId !== 'default' && (
-              <>
+              <div className="flex items-center gap-0.5 border-l border-gray-200 pl-2">
                 <button 
                   onClick={() => {
                     if (confirm("現在の表示状態（ポスター・ロゴの組み合わせ）でこのテンプレートを上書き保存しますか？")) {
@@ -181,9 +161,28 @@ function App() {
                       savePresets(updatedPresets);
                     }
                   }}
-                  className="bg-green-600 text-white text-xs px-3 py-1.5 rounded hover:bg-green-700 transition-colors whitespace-nowrap"
+                  className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors flex items-center justify-center"
+                  title="上書き保存"
                 >
-                  上書き
+                  <span className="material-symbols-outlined text-[20px]">save</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    const preset = layoutPresets.find(p => p.id === selectedPresetId);
+                    if (preset) {
+                      const newName = prompt("新しいテンプレート名を入力してください", preset.name);
+                      if (newName && newName !== preset.name) {
+                        const updatedPresets = layoutPresets.map(p => 
+                          p.id === selectedPresetId ? { ...p, name: newName } : p
+                        );
+                        savePresets(updatedPresets);
+                      }
+                    }
+                  }}
+                  className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center justify-center"
+                  title="名前の変更"
+                >
+                  <span className="material-symbols-outlined text-[20px]">edit</span>
                 </button>
                 <button 
                   onClick={() => {
@@ -194,26 +193,30 @@ function App() {
                       setPosterImages({});
                     }
                   }}
-                  className="bg-red-500 text-white text-xs px-3 py-1.5 rounded hover:bg-red-600 transition-colors whitespace-nowrap"
+                  className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors flex items-center justify-center"
+                  title="削除"
                 >
-                  削除
+                  <span className="material-symbols-outlined text-[20px]">delete</span>
                 </button>
-              </>
+              </div>
             )}
 
-            <button 
-              onClick={() => {
-                const name = prompt("新しいテンプレート名を入力してください", `設定 ${layoutPresets.length}`);
-                if (name) {
-                  const newPreset = { id: Date.now().toString(), name, images: { ...posterImages } };
-                  savePresets([...layoutPresets, newPreset]);
-                  setSelectedPresetId(newPreset.id);
-                }
-              }}
-              className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
-            >
-              新規保存
-            </button>
+            <div className="flex items-center border-l border-gray-200 pl-2 ml-1">
+              <button 
+                onClick={() => {
+                  const name = prompt("新しいテンプレート名を入力してください", `設定 ${layoutPresets.length + 1}`);
+                  if (name) {
+                    const newPreset = { id: Date.now().toString(), name, images: { ...posterImages } };
+                    savePresets([...layoutPresets, newPreset]);
+                    setSelectedPresetId(newPreset.id);
+                  }
+                }}
+                className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center justify-center"
+                title="新規保存"
+              >
+                <span className="material-symbols-outlined text-[20px]">add_circle</span>
+              </button>
+            </div>
           </div>
           <button 
             onClick={() => setIsTemplateSettingsOpen(true)}
@@ -327,13 +330,13 @@ function App() {
       {/* Template Settings Modal */}
       {isTemplateSettingsOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md flex flex-col gap-6">
+          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-3xl flex flex-col gap-6">
             <div className="text-center">
               <h3 className="text-lg font-bold text-gray-800">テンプレート設定</h3>
               <p className="text-sm text-gray-500 mt-1">ポスターに使える画像を管理します</p>
             </div>
             
-            <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-64 p-1">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 overflow-y-auto max-h-[60vh] p-1">
               {templateGallery.map((templateUrl, idx) => (
                 <div key={idx} className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50 group">
                   <img src={templateUrl} alt="template" className="w-full h-full object-cover" />
