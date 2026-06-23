@@ -70,6 +70,7 @@ interface BoothProps {
   posterImages?: Record<string, string>;
   onPosterClick?: (id: string) => void;
   posterCount?: 4 | 5;
+  signPattern?: 'banner' | 'noren';
 }
 
 function ShavedIceMachine({ position, rotation }: { position: [number, number, number], rotation?: [number, number, number] }) {
@@ -454,7 +455,7 @@ function DimensionsOverlay() {
   );
 }
 
-export function Booth({ showDimensions = false, posterImages = {}, onPosterClick, posterCount = 4 }: BoothProps) {
+export function Booth({ showDimensions = false, posterImages = {}, onPosterClick, posterCount = 4, signPattern = 'banner' }: BoothProps) {
   const zDepthLeftRight = dimensions.totalDepth - dimensions.frontCounterDepth;
   const zPosLeftRight = -dimensions.frontCounterDepth - zDepthLeftRight / 2;
 
@@ -627,18 +628,70 @@ export function Booth({ showDimensions = false, posterImages = {}, onPosterClick
       </group>
 
       {/* Top Banner (LOGO) */}
-      <CustomPoster 
-        position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.20, -dimensions.totalDepth / 2]}
-        rotation={[0, -Math.PI / 2, 0]}
-        args={[posterCount === 5 ? 2.22 : 1.77, 0.35, 0.02]}
-        imageUrl={posterImages['logo']}
-        onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
-        text="LOGO"
-        bgColor="#222222"
-        textColor="#ffffff"
-        fontSize={0.25}
-        letterSpacing={0.1}
-      />
+      {signPattern === 'banner' && (
+        <CustomPoster 
+          position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH + 0.594 + 0.20, -dimensions.totalDepth / 2]}
+          rotation={[0, -Math.PI / 2, 0]}
+          args={[posterCount === 5 ? 2.22 : 1.77, 0.35, 0.02]}
+          imageUrl={posterImages['logo']}
+          onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
+          text="LOGO"
+          bgColor="#222222"
+          textColor="#ffffff"
+          fontSize={0.25}
+          letterSpacing={0.1}
+        />
+      )}
+
+      {/* Noren (のれん) Pattern */}
+      {signPattern === 'noren' && (
+        <group>
+          {/* Wooden Rod for Noren */}
+          <mesh 
+            position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH - 0.03, -dimensions.totalDepth / 2]}
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <cylinderGeometry args={[0.012, 0.012, posterCount === 5 ? 2.30 : 1.85, 16]} />
+            <meshStandardMaterial color="#cda47b" roughness={0.6} /> {/* Wood rod */}
+          </mesh>
+
+          {/* Tab Loops hanging from the rod to the noren */}
+          {(() => {
+            const norenW = posterCount === 5 ? 2.22 : 1.77;
+            const loopCount = posterCount === 5 ? 8 : 6;
+            const loops = [];
+            const zStart = -dimensions.totalDepth / 2 - norenW / 2;
+            for (let i = 0; i < loopCount; i++) {
+              const t = i / (loopCount - 1);
+              const zPos = zStart + t * norenW;
+              loops.push(
+                <mesh 
+                  key={`loop-${i}`}
+                  position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH - 0.03, zPos]}
+                >
+                  <boxGeometry args={[0.01, 0.06, 0.01]} />
+                  <meshBasicMaterial color="#ffffff" />
+                </mesh>
+              );
+            }
+            return loops;
+          })()}
+
+          {/* Noren Curtain */}
+          <CustomPoster 
+            position={[leftPoleX - 0.015, dimensions.baseHeight + leftPoleH - 0.03 - 0.03 - 0.15, -dimensions.totalDepth / 2]}
+            rotation={[0, -Math.PI / 2, 0]}
+            args={[posterCount === 5 ? 2.22 : 1.77, 0.30, 0.002]}
+            imageUrl={posterImages['logo']}
+            onClick={(e) => { e.stopPropagation(); onPosterClick?.('logo'); }}
+            text="のれんロゴ"
+            bgColor="#ffffff"
+            textColor="#333333"
+            fontSize={0.18}
+            letterSpacing={0.08}
+          />
+        </group>
+      )}
       {/* Hot Showcase (温め機) */}
       <HotShowcase 
         position={[leftCounterX, dimensions.baseHeight, -2.1]} 

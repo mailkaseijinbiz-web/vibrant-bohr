@@ -8,6 +8,7 @@ type LayoutPreset = {
   name: string;
   images: Record<string, string>;
   posterCount?: 4 | 5;
+  signPattern?: 'banner' | 'noren';
 };
 
 const resizeAndBase64 = (file: File, callback: (base64: string) => void) => {
@@ -49,6 +50,7 @@ function App() {
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
   const [posterCount, setPosterCount] = useState<4 | 5>(4);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [signPattern, setSignPattern] = useState<'banner' | 'noren'>('banner');
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
@@ -191,10 +193,12 @@ function App() {
                   if (preset) {
                     setPosterImages(preset.images);
                     setPosterCount(preset.posterCount || 4);
+                    setSignPattern(preset.signPattern || 'banner');
                   }
                 } else {
                   setPosterImages({});
                   setPosterCount(4);
+                  setSignPattern('banner');
                 }
               }}
               className="bg-transparent text-sm text-gray-700 outline-none cursor-pointer max-w-[120px] sm:max-w-none"
@@ -211,7 +215,7 @@ function App() {
                   onClick={() => {
                     if (confirm("現在の表示状態（ポスター・ロゴの組み合わせ）でこのテンプレートを上書き保存しますか？")) {
                       const updatedPresets = layoutPresets.map(p => 
-                        p.id === selectedPresetId ? { ...p, images: { ...posterImages }, posterCount } : p
+                        p.id === selectedPresetId ? { ...p, images: { ...posterImages }, posterCount, signPattern } : p
                       );
                       savePresets(updatedPresets);
                     }
@@ -266,7 +270,7 @@ function App() {
                 onClick={() => {
                   const name = prompt("新しいテンプレート名を入力してください", `設定 ${layoutPresets.length + 1}`);
                   if (name) {
-                    const newPreset: LayoutPreset = { id: Date.now().toString(), name, images: { ...posterImages }, posterCount };
+                    const newPreset: LayoutPreset = { id: Date.now().toString(), name, images: { ...posterImages }, posterCount, signPattern };
                     savePresets([...layoutPresets, newPreset]);
                     setSelectedPresetId(newPreset.id);
                   }
@@ -306,6 +310,35 @@ function App() {
                       <option value={4}>A2 4枚</option>
                       <option value={5}>A2 5枚</option>
                     </select>
+                  </div>
+
+                  {/* 看板スタイル */}
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-semibold text-gray-500">看板スタイル</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSignPattern('banner')}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                          signPattern === 'banner'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        看板
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSignPattern('noren')}
+                        className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                          signPattern === 'noren'
+                            ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm'
+                            : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        のれん
+                      </button>
+                    </div>
                   </div>
 
                   {/* 2. 画像一覧 */}
@@ -355,6 +388,7 @@ function App() {
               posterImages={posterImages}
               onPosterClick={handlePosterClick}
               posterCount={posterCount}
+              signPattern={signPattern}
             />
             
             {/* Ground / Shadows */}
