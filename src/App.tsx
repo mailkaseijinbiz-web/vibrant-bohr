@@ -12,12 +12,11 @@ const defaultTemplates: Record<string, string> = {
   'a1-middle': '/posters/poster_kakigori_1782184890220.png',
 };
 
-const allTemplates = Object.values(defaultTemplates);
-
 function App() {
   const [showDimensions, setShowDimensions] = useState(false);
   const [posterImages, setPosterImages] = useState<Record<string, string>>(defaultTemplates);
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
+  const [templateGallery, setTemplateGallery] = useState<string[]>(Object.values(defaultTemplates));
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
@@ -29,6 +28,7 @@ function App() {
     if (file && activePosterId) {
       const url = URL.createObjectURL(file);
       setPosterImages(prev => ({ ...prev, [activePosterId]: url }));
+      setTemplateGallery(prev => [...prev, url]);
     }
     setActivePosterId(null);
   };
@@ -88,7 +88,7 @@ function App() {
             </div>
             
             <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-48 p-1">
-              {allTemplates.map((templateUrl) => (
+              {templateGallery.map((templateUrl) => (
                 <button
                   key={templateUrl}
                   onClick={() => {
