@@ -327,7 +327,7 @@ function App() {
             />
             
             {/* Ground / Shadows */}
-            <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={10} blur={2} far={4} />
+            <ContactShadows position={[0, 0, -1.2]} opacity={0.4} scale={20} blur={2.5} far={4} />
           </group>
 
           {/* Controls & Environment */}
