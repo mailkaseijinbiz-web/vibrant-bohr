@@ -1,21 +1,23 @@
-import { kv } from '@vercel/kv';
 import crypto from 'crypto';
+import { getRedis, storeGet, storeSet } from './_store.js';
+
+const newId = () =>
+  typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
 export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
-      const { state } = req.body;
+      const { state } = req.body || {};
       if (!state) {
         return res.status(400).json({ error: 'Missing state data' });
       }
 
       let id;
-      if (process.env.KV_REST_API_URL) {
-        id = typeof crypto.randomUUID === 'function'
-          ? crypto.randomUUID()
-          : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-        await kv.set(`vibrant-bohr-share:${id}`, state);
+      if (getRedis()) {
+        id = newId();
+        await storeSet(`vibrant-bohr-share:${id}`, state);
       } else {
         // Fallback: upload state JSON to paste.rs
         const response = await fetch('https://paste.rs/', {
@@ -36,8 +38,8 @@ export default async function handler(req, res) {
       }
 
       let state;
-      if (process.env.KV_REST_API_URL) {
-        state = await kv.get(`vibrant-bohr-share:${id}`);
+      if (getRedis()) {
+        state = await storeGet(`vibrant-bohr-share:${id}`);
       } else {
         // Fallback: fetch state JSON from paste.rs
         const response = await fetch(`https://paste.rs/${id}`);
