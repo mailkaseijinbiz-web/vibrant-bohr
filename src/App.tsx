@@ -74,7 +74,9 @@ function App() {
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const [showTemplateChooser, setShowTemplateChooser] = useState(false);
   const didMountPresetSync = useRef(false);
+  const didOfferChooser = useRef(false);
   const templateLoadTimer = useRef<number | null>(null);
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -393,34 +395,44 @@ function App() {
     templateLoadTimer.current = window.setTimeout(() => setIsLoadingTemplate(false), 6000);
   };
 
+  // Apply a saved template's full layout. Setting selectedPresetId also syncs
+  // the address-bar permalink via the effect below.
+  const applyPreset = (preset: LayoutPreset) => {
+    preloadTemplateImages(preset.images);
+    setSelectedPresetId(preset.id);
+    setPosterImages(preset.images);
+    setPosterCount(preset.posterCount || 4);
+    setSignPattern(preset.signPattern || 'banner');
+    setShowSignboard(preset.showSignboard !== undefined ? preset.showSignboard : true);
+    setSignboardX(preset.signboardX !== undefined ? preset.signboardX : 1.2);
+    setSignboardZ(preset.signboardZ !== undefined ? preset.signboardZ : -0.6);
+    setSignboardRotation(preset.signboardRotation !== undefined ? preset.signboardRotation : 45);
+    setLeftPanelPattern(preset.leftPanelPattern || 'corkboard');
+    setIceMachineX(preset.iceMachineX !== undefined ? preset.iceMachineX : 0.925);
+    setIceMachineZ(preset.iceMachineZ !== undefined ? preset.iceMachineZ : -2.0);
+    setIceMachineRotation(preset.iceMachineRotation !== undefined ? preset.iceMachineRotation : -90);
+    setShowcaseX(preset.showcaseX !== undefined ? preset.showcaseX : -0.975);
+    setShowcaseZ(preset.showcaseZ !== undefined ? preset.showcaseZ : -2.1);
+    setShowcaseRotation(preset.showcaseRotation !== undefined ? preset.showcaseRotation : -90);
+    setLeftFrontPanelPattern(preset.leftFrontPanelPattern || 'a1');
+  };
+
+  // On first load (once templates are fetched): apply a ?preset=<id> deep link,
+  // leave shared links (?share/?state) to their own loader, otherwise — when
+  // nothing is selected yet — prompt the user to pick a template.
   useEffect(() => {
-    if (layoutPresets.length > 0) {
-      const params = new URLSearchParams(window.location.search);
-      const presetParam = params.get('preset');
-      if (presetParam) {
-        const preset = layoutPresets.find(p => p.id === presetParam);
-        if (preset) {
-          setSelectedPresetId(presetParam);
-          setPosterImages(preset.images);
-          setPosterCount(preset.posterCount || 4);
-          setSignPattern(preset.signPattern || 'banner');
-          setShowSignboard(preset.showSignboard !== undefined ? preset.showSignboard : true);
-          setSignboardX(preset.signboardX !== undefined ? preset.signboardX : 1.2);
-          setSignboardZ(preset.signboardZ !== undefined ? preset.signboardZ : -0.6);
-          setSignboardRotation(preset.signboardRotation !== undefined ? preset.signboardRotation : 45);
-          setLeftPanelPattern(preset.leftPanelPattern || 'corkboard');
-          setIceMachineX(preset.iceMachineX !== undefined ? preset.iceMachineX : 0.925);
-          setIceMachineZ(preset.iceMachineZ !== undefined ? preset.iceMachineZ : -2.0);
-          setIceMachineRotation(preset.iceMachineRotation !== undefined ? preset.iceMachineRotation : -90);
-          setShowcaseX(preset.showcaseX !== undefined ? preset.showcaseX : -0.975);
-          setShowcaseZ(preset.showcaseZ !== undefined ? preset.showcaseZ : -2.1);
-          setShowcaseRotation(preset.showcaseRotation !== undefined ? preset.showcaseRotation : -90);
-          setLeftFrontPanelPattern(preset.leftFrontPanelPattern || 'a1');
-          
-          preloadTemplateImages(preset.images);
-          showToast(`テンプレート「${preset.name}」を読み込みました！`);
-        }
+    if (didOfferChooser.current || layoutPresets.length === 0) return;
+    didOfferChooser.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const presetParam = params.get('preset');
+    if (presetParam) {
+      const preset = layoutPresets.find(p => p.id === presetParam);
+      if (preset) {
+        applyPreset(preset);
+        showToast(`テンプレート「${preset.name}」を読み込みました！`);
       }
+    } else if (!selectedPresetId && !params.get('share') && !params.get('state')) {
+      setShowTemplateChooser(true);
     }
   }, [layoutPresets]);
 
@@ -1368,6 +1380,49 @@ function App() {
           <div className="bg-white px-6 py-5 rounded-2xl shadow-xl flex items-center gap-3">
             <span className="material-symbols-outlined text-[24px] text-blue-600 animate-spin">progress_activity</span>
             <span className="text-gray-800 font-semibold">テンプレートを読み込み中...</span>
+          </div>
+        </div>
+      )}
+
+      {showTemplateChooser && (
+        <div className="fixed inset-0 z-[9990] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md flex flex-col gap-5 max-h-[85vh]">
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-800">テンプレートを選択</h3>
+              <p className="text-sm text-gray-500 mt-1">使用するテンプレートを選んでください</p>
+            </div>
+            <div className="flex flex-col gap-2 overflow-y-auto p-1">
+              {layoutPresets.map((preset) => {
+                const thumb = Object.values(preset.images || {}).find(Boolean);
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => {
+                      applyPreset(preset);
+                      setShowTemplateChooser(false);
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98] transition-all text-left"
+                  >
+                    {thumb ? (
+                      <img src={thumb} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                    ) : (
+                      <span className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">dashboard</span>
+                      </span>
+                    )}
+                    <span className="font-semibold text-gray-800">{preset.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowTemplateChooser(false)}
+              className="py-3 rounded-xl font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-95 transition-colors"
+            >
+              選ばずに始める
+            </button>
           </div>
         </div>
       )}
