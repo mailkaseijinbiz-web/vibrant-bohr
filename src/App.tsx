@@ -1121,73 +1121,47 @@ function App() {
               <p className="text-sm text-gray-500 mt-1">テンプレートから選ぶか、画像をアップロードしてください</p>
             </div>
 
-            {/* Folder Tabs */}
-            <div className="flex border-b border-gray-200 overflow-x-auto gap-2 pb-2 scrollbar-thin">
-              <button
-                type="button"
-                onClick={() => setActiveGalleryTab('')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${
-                  activeGalleryTab === '' 
-                    ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-sm' 
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                初期状態
-              </button>
-              {layoutPresets.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  onClick={() => setActiveGalleryTab(preset.id)}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all whitespace-nowrap ${
-                    activeGalleryTab === preset.id 
-                      ? 'bg-purple-100 text-purple-700 border-purple-200 shadow-sm' 
-                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {preset.name}
-                </button>
-              ))}
-            </div>
-            
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[50vh] p-1">
-              {(templateGallery[activeGalleryTab] || []).length > 0 ? (
-                (templateGallery[activeGalleryTab] || []).map((templateUrl, idx) => (
-                  <div key={templateUrl} className="flex flex-col gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPosterImages(prev => ({ ...prev, [activePosterId]: templateUrl }));
-                        setActivePosterId(null);
-                      }}
-                      className="relative aspect-[1/1.4] w-full rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50 transition-transform active:scale-95"
-                    >
-                      <img src={templateUrl} alt="template" className="w-full h-full object-cover pointer-events-none" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="この画像を削除"
-                      onClick={() => {
-                        if (confirm("この画像を一覧から削除しますか？")) {
-                          const current = templateGallery[activeGalleryTab] || [];
-                          saveGallery({
-                            ...templateGallery,
-                            [activeGalleryTab]: current.filter((_, i) => i !== idx)
-                          });
-                        }
-                      }}
-                      className="flex items-center justify-center gap-1 text-xs font-medium text-red-600 bg-red-50 rounded-md py-1.5 hover:bg-red-100 active:scale-95 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
-                      削除
-                    </button>
+              {(() => {
+                const allImages = Array.from(new Set(Object.values(templateGallery).flat()));
+                return allImages.length > 0 ? (
+                  allImages.map((templateUrl) => (
+                    <div key={templateUrl} className="flex flex-col gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPosterImages(prev => ({ ...prev, [activePosterId]: templateUrl }));
+                          setActivePosterId(null);
+                        }}
+                        className="relative aspect-[1/1.4] w-full rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50 transition-transform active:scale-95"
+                      >
+                        <img src={templateUrl} alt="template" className="w-full h-full object-cover pointer-events-none" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="この画像を削除"
+                        onClick={() => {
+                          if (confirm("この画像を一覧から削除しますか？")) {
+                            const updated: Record<string, string[]> = {};
+                            Object.entries(templateGallery).forEach(([key, urls]) => {
+                              updated[key] = urls.filter((u) => u !== templateUrl);
+                            });
+                            saveGallery(updated);
+                          }
+                        }}
+                        className="flex items-center justify-center gap-1 text-xs font-medium text-red-600 bg-red-50 rounded-md py-1.5 hover:bg-red-100 active:scale-95 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        削除
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full py-8 text-center text-sm text-gray-400">
+                    画像がありません。下のボタンからアップロードしてください。
                   </div>
-                ))
-              ) : (
-                <div className="col-span-full py-8 text-center text-sm text-gray-400">
-                  このフォルダに画像はありません。アップロードしてください。
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             <div className="flex flex-col gap-3">
