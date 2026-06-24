@@ -1153,25 +1153,21 @@ function App() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[50vh] p-1">
               {(templateGallery[activeGalleryTab] || []).length > 0 ? (
                 (templateGallery[activeGalleryTab] || []).map((templateUrl, idx) => (
-                  <div
-                    key={templateUrl}
-                    className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50"
-                  >
+                  <div key={templateUrl} className="flex flex-col gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
                         setPosterImages(prev => ({ ...prev, [activePosterId]: templateUrl }));
                         setActivePosterId(null);
                       }}
-                      className="block w-full h-full transition-transform active:scale-95"
+                      className="relative aspect-[1/1.4] w-full rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50 transition-transform active:scale-95"
                     >
                       <img src={templateUrl} alt="template" className="w-full h-full object-cover pointer-events-none" />
                     </button>
                     <button
                       type="button"
                       aria-label="この画像を削除"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={() => {
                         if (confirm("この画像を一覧から削除しますか？")) {
                           const current = templateGallery[activeGalleryTab] || [];
                           saveGallery({
@@ -1180,9 +1176,10 @@ function App() {
                           });
                         }
                       }}
-                      className="absolute top-1 right-1 z-10 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                      className="flex items-center justify-center gap-1 text-xs font-medium text-red-600 bg-red-50 rounded-md py-1.5 hover:bg-red-100 active:scale-95 transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                      <span className="material-symbols-outlined text-[16px]">delete</span>
+                      削除
                     </button>
                   </div>
                 ))
