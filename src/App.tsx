@@ -1150,19 +1150,41 @@ function App() {
               ))}
             </div>
             
-            <div className="grid grid-cols-3 gap-3 overflow-y-auto max-h-48 p-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[50vh] p-1">
               {(templateGallery[activeGalleryTab] || []).length > 0 ? (
-                (templateGallery[activeGalleryTab] || []).map((templateUrl) => (
-                  <button
+                (templateGallery[activeGalleryTab] || []).map((templateUrl, idx) => (
+                  <div
                     key={templateUrl}
-                    onClick={() => {
-                      setPosterImages(prev => ({ ...prev, [activePosterId]: templateUrl }));
-                      setActivePosterId(null);
-                    }}
-                    className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 hover:border-blue-500 hover:shadow-md transition-all active:scale-95 bg-gray-50"
+                    className="relative aspect-[1/1.4] rounded-lg overflow-hidden border-2 border-gray-100 bg-gray-50"
                   >
-                    <img src={templateUrl} alt="template" className="w-full h-full object-cover" />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPosterImages(prev => ({ ...prev, [activePosterId]: templateUrl }));
+                        setActivePosterId(null);
+                      }}
+                      className="block w-full h-full transition-transform active:scale-95"
+                    >
+                      <img src={templateUrl} alt="template" className="w-full h-full object-cover pointer-events-none" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="この画像を削除"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm("この画像を一覧から削除しますか？")) {
+                          const current = templateGallery[activeGalleryTab] || [];
+                          saveGallery({
+                            ...templateGallery,
+                            [activeGalleryTab]: current.filter((_, i) => i !== idx)
+                          });
+                        }
+                      }}
+                      className="absolute top-1 right-1 z-10 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md active:scale-90 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
                 ))
               ) : (
                 <div className="col-span-full py-8 text-center text-sm text-gray-400">
@@ -1262,7 +1284,8 @@ function App() {
                           [activeGalleryTab]: updatedImages
                         });
                       }}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                      aria-label="この画像を削除"
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md active:scale-90 transition-transform text-xs"
                     >
                       ✕
                     </button>
