@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Canvas } from '@react-three/fiber'
+import * as THREE from 'three'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { Booth } from './components/Booth'
 
@@ -69,15 +70,26 @@ const uploadImageToServer = async (base64: string): Promise<string> => {
   return base64;
 };
 
+// Exposes the live three.js scene (for exporting to USDZ / AR Quick Look).
+function SceneCapture({ sceneRef }: { sceneRef: { current: any } }) {
+  const scene = useThree((s) => s.scene);
+  useEffect(() => {
+    sceneRef.current = scene;
+  }, [scene, sceneRef]);
+  return null;
+}
+
 function App() {
   const [showDimensions, setShowDimensions] = useState(false);
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
   const [showTemplateChooser, setShowTemplateChooser] = useState(false);
+  const [isExportingAR, setIsExportingAR] = useState(false);
   const didMountPresetSync = useRef(false);
   const didOfferChooser = useRef(false);
   const templateLoadTimer = useRef<number | null>(null);
+  const sceneRef = useRef<any>(null);
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   
@@ -473,6 +485,70 @@ function App() {
     }
     setActivePosterId(null);
   };
+  const handleAR = async () => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    const probe = document.createElement('a');
+    const arSupported = !!(probe.relList && typeof probe.relList.supports === 'function' && probe.relList.supports('ar'));
+    if (!arSupported) {
+      showToast('この端末はAR（クイックルック）に未対応です。iPhone/iPadのSafariでお試しください。');
+      return;
+    }
+    // USDZExporter only exports meshes that use a MeshStandardMaterial. The
+    // posters use MeshBasicMaterial, so swap those to a temporary standard
+    // material (keeping the texture) for the duration of the export, then
+    // restore them so the live preview is unchanged.
+    const swapped: { mesh: any; original: any; temp: any }[] = [];
+    try {
+      setIsExportingAR(true);
+      scene.traverse((obj: any) => {
+        if (obj.isMesh && obj.material && obj.material.isMeshBasicMaterial) {
+          const original = obj.material;
+          // Skip render-target-backed materials (e.g. ContactShadows): they
+          // can't be exported and should be left out of the USDZ entirely.
+          if (original.map && original.map.isRenderTargetTexture) return;
+          const temp = new THREE.MeshStandardMaterial({
+            map: original.map || null,
+            color: original.color ? original.color.clone() : new THREE.Color(0xffffff),
+            roughness: 0.85,
+            metalness: 0,
+            side: original.side,
+            transparent: original.transparent,
+            opacity: original.opacity,
+          });
+          obj.material = temp;
+          swapped.push({ mesh: obj, original, temp });
+        }
+      });
+      const { USDZExporter } = await import('three/examples/jsm/exporters/USDZExporter.js');
+      const exporter = new USDZExporter();
+      const arraybuffer = await exporter.parseAsync(scene, { onlyVisible: true });
+      const blob = new Blob([arraybuffer as BlobPart], { type: 'model/vnd.usdz+zip' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.setAttribute('rel', 'ar');
+      // iOS requires the AR anchor to contain a child element (an <img>).
+      const img = document.createElement('img');
+      img.style.display = 'none';
+      anchor.appendChild(img);
+      anchor.setAttribute('href', url);
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+    } catch (e) {
+      console.error('AR export failed', e);
+      showToast('ARの書き出しに失敗しました');
+    } finally {
+      // Restore the original poster materials.
+      swapped.forEach(({ mesh, original, temp }) => {
+        mesh.material = original;
+        temp.dispose();
+      });
+      setIsExportingAR(false);
+    }
+  };
+
   const handleShare = async () => {
     try {
       showToast("共有用の設定を準備中...");
@@ -785,7 +861,16 @@ function App() {
             </div>
           </div>
           
-          <button 
+          <button
+            onClick={handleAR}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm active:scale-95 cursor-pointer"
+            title="ARで実物大に表示（iPhone/iPad）"
+          >
+            <span className="material-symbols-outlined text-[18px]">view_in_ar</span>
+            <span>AR</span>
+          </button>
+
+          <button
             onClick={handleShare}
             className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm active:scale-95 cursor-pointer"
             title="共有リンクをコピー"
@@ -1136,6 +1221,7 @@ function App() {
 
       <main className="flex-1 w-full relative">
         <Canvas camera={{ position: [-5, 2, -1], fov: 45 }}>
+          <SceneCapture sceneRef={sceneRef} />
           {/* Lighting */}
           <ambientLight intensity={0.5} />
           <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
@@ -1380,6 +1466,15 @@ function App() {
           <div className="bg-white px-6 py-5 rounded-2xl shadow-xl flex items-center gap-3">
             <span className="material-symbols-outlined text-[24px] text-blue-600 animate-spin">progress_activity</span>
             <span className="text-gray-800 font-semibold">テンプレートを読み込み中...</span>
+          </div>
+        </div>
+      )}
+
+      {isExportingAR && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white px-6 py-5 rounded-2xl shadow-xl flex items-center gap-3">
+            <span className="material-symbols-outlined text-[24px] text-emerald-600 animate-spin">progress_activity</span>
+            <span className="text-gray-800 font-semibold">AR用に書き出し中...</span>
           </div>
         </div>
       )}
