@@ -3,11 +3,15 @@ import { kv } from '@vercel/kv';
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
-      const presets = await kv.get('vibrant-bohr-presets') || [];
+      const presets = process.env.KV_REST_API_URL
+        ? (await kv.get('vibrant-bohr-presets') || [])
+        : [];
       return res.status(200).json(presets);
     } else if (req.method === 'POST') {
       const presets = req.body;
-      await kv.set('vibrant-bohr-presets', presets);
+      if (process.env.KV_REST_API_URL) {
+        await kv.set('vibrant-bohr-presets', presets);
+      }
       return res.status(200).json({ success: true });
     }
   } catch (error) {

@@ -11,7 +11,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing image id' });
     }
 
-    const base64 = await kv.get(`vibrant-bohr-image:${id}`);
+    let base64;
+    if (process.env.KV_REST_API_URL) {
+      base64 = await kv.get(`vibrant-bohr-image:${id}`);
+    } else {
+      // Fallback: fetch from paste.rs
+      const response = await fetch(`https://paste.rs/${id}`);
+      if (response.ok) {
+        base64 = await response.text();
+      }
+    }
+
     if (!base64) {
       return res.status(404).json({ error: 'Image not found' });
     }

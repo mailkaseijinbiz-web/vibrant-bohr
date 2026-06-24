@@ -3,11 +3,15 @@ import { kv } from '@vercel/kv';
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
-      const gallery = await kv.get('vibrant-bohr-gallery') || [];
+      const gallery = process.env.KV_REST_API_URL
+        ? (await kv.get('vibrant-bohr-gallery') || [])
+        : [];
       return res.status(200).json(gallery);
     } else if (req.method === 'POST') {
       const gallery = req.body;
-      await kv.set('vibrant-bohr-gallery', gallery);
+      if (process.env.KV_REST_API_URL) {
+        await kv.set('vibrant-bohr-gallery', gallery);
+      }
       return res.status(200).json({ success: true });
     }
   } catch (error) {
