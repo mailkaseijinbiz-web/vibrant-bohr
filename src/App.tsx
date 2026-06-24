@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei'
 import { Booth } from './components/Booth'
@@ -73,6 +73,9 @@ function App() {
   const [showDimensions, setShowDimensions] = useState(false);
   const [posterImages, setPosterImages] = useState<Record<string, string>>({});
   const [activePosterId, setActivePosterId] = useState<string | null>(null);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  const didMountPresetSync = useRef(false);
+  const templateLoadTimer = useRef<number | null>(null);
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   
@@ -355,6 +358,41 @@ function App() {
     loadData();
   }, []);
 
+  // Show a loading indicator while a template's images are fetched, then hide it
+  // once they're all in the browser cache (which also warms them for the 3D
+  // textures). A timeout guarantees the indicator never gets stuck.
+  const preloadTemplateImages = (images: Record<string, string> | undefined) => {
+    if (templateLoadTimer.current) {
+      window.clearTimeout(templateLoadTimer.current);
+      templateLoadTimer.current = null;
+    }
+    const urls = Object.values(images || {}).filter(Boolean);
+    if (urls.length === 0) {
+      setIsLoadingTemplate(false);
+      return;
+    }
+    setIsLoadingTemplate(true);
+    let remaining = urls.length;
+    const done = () => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        setIsLoadingTemplate(false);
+        if (templateLoadTimer.current) {
+          window.clearTimeout(templateLoadTimer.current);
+          templateLoadTimer.current = null;
+        }
+      }
+    };
+    urls.forEach((url) => {
+      const img = new Image();
+      img.onload = done;
+      img.onerror = done;
+      img.src = url;
+    });
+    // Safety net: never leave the indicator spinning forever.
+    templateLoadTimer.current = window.setTimeout(() => setIsLoadingTemplate(false), 6000);
+  };
+
   useEffect(() => {
     if (layoutPresets.length > 0) {
       const params = new URLSearchParams(window.location.search);
@@ -379,15 +417,27 @@ function App() {
           setShowcaseRotation(preset.showcaseRotation !== undefined ? preset.showcaseRotation : -90);
           setLeftFrontPanelPattern(preset.leftFrontPanelPattern || 'a1');
           
+          preloadTemplateImages(preset.images);
           showToast(`テンプレート「${preset.name}」を読み込みました！`);
-          
-          // Clear URL parameter
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
         }
       }
     }
   }, [layoutPresets]);
+
+  // Keep the address bar in sync with the selected template so it acts as a
+  // shareable permalink (?preset=<id>). Skip the very first run so a deep-linked
+  // ?preset= isn't stripped before the loader above has read it.
+  useEffect(() => {
+    if (!didMountPresetSync.current) {
+      didMountPresetSync.current = true;
+      return;
+    }
+    const base = window.location.origin + window.location.pathname;
+    const url = selectedPresetId
+      ? `${base}?preset=${encodeURIComponent(selectedPresetId)}`
+      : base;
+    window.history.replaceState(null, '', url);
+  }, [selectedPresetId]);
 
   const handlePosterClick = (id: string) => {
     setActivePosterId(id);
@@ -520,6 +570,7 @@ function App() {
                 if (id) {
                   const preset = layoutPresets.find(p => p.id === id);
                   if (preset) {
+                    preloadTemplateImages(preset.images);
                     setPosterImages(preset.images);
                     setPosterCount(preset.posterCount || 4);
                     setSignPattern(preset.signPattern || 'banner');
@@ -537,6 +588,7 @@ function App() {
                     setLeftFrontPanelPattern(preset.leftFrontPanelPattern || 'a1');
                   }
                 } else {
+                  setIsLoadingTemplate(false);
                   setPosterImages({});
                   setPosterCount(4);
                   setSignPattern('banner');
@@ -1308,6 +1360,15 @@ function App() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-sm text-white px-5 py-3 rounded-full text-sm font-semibold shadow-xl z-[9999] flex items-center gap-2 transition-all">
           <span className="material-symbols-outlined text-[18px] text-green-400">check_circle</span>
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {isLoadingTemplate && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white px-6 py-5 rounded-2xl shadow-xl flex items-center gap-3">
+            <span className="material-symbols-outlined text-[24px] text-blue-600 animate-spin">progress_activity</span>
+            <span className="text-gray-800 font-semibold">テンプレートを読み込み中...</span>
+          </div>
         </div>
       )}
     </div>
