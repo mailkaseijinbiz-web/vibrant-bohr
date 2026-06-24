@@ -42,7 +42,15 @@ function CustomPoster({
   const texture = useMemo(() => {
     if (!imageUrl) return null;
     const loader = new THREE.TextureLoader();
-    return loader.load(imageUrl);
+    const tex = loader.load(imageUrl);
+    // Uploaded posters are resized to arbitrary (non-power-of-two) sizes.
+    // On mobile WebGL the default mipmapped minFilter can't handle NPOT
+    // textures and renders them black, so disable mipmaps and use a linear
+    // filter. Also tag the texture as sRGB so colors aren't rendered too dark.
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    return tex;
   }, [imageUrl]);
 
   return (
