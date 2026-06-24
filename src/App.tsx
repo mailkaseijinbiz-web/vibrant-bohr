@@ -110,8 +110,15 @@ function App() {
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
+    // Persist to localStorage and the server independently: a localStorage
+    // quota error (e.g. multiple presets holding inline base64 images) must not
+    // prevent the server-side save.
     try {
       localStorage.setItem('vibrant-bohr-presets', JSON.stringify(newPresets));
+    } catch (e) {
+      console.warn("Failed to cache presets in localStorage", e);
+    }
+    try {
       await fetch('/api/presets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,6 +133,10 @@ function App() {
     setTemplateGallery(newGallery);
     try {
       localStorage.setItem('vibrant-bohr-gallery', JSON.stringify(newGallery));
+    } catch (e) {
+      console.warn("Failed to cache gallery in localStorage", e);
+    }
+    try {
       await fetch('/api/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -463,32 +474,32 @@ function App() {
         });
       };
 
-      if (longShareUrl.length >= 2000) {
-        showToast("短縮リンクを生成中...");
-        fetch('/api/share', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ state })
+      // Always create a short, server-backed link (?share=<id>) so the shared
+      // URL stays tiny regardless of how big the configuration is — important
+      // for messengers like LINE. Only fall back to the inline ?state= URL if
+      // the server is unavailable.
+      showToast("短縮リンクを生成中...");
+      fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state })
+      })
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error("Server share failed");
         })
-          .then((res) => {
-            if (res.ok) return res.json();
-            throw new Error("Server share failed");
-          })
-          .then((data) => {
-            if (data.id) {
-              const shortUrl = `${window.location.origin}${window.location.pathname}?share=${data.id}`;
-              copyUrlToClipboard(shortUrl);
-            } else {
-              copyUrlToClipboard(longShareUrl);
-            }
-          })
-          .catch((err) => {
-            console.warn("Failed to create short share link, copying long link", err);
+        .then((data) => {
+          if (data.id) {
+            const shortUrl = `${window.location.origin}${window.location.pathname}?share=${data.id}`;
+            copyUrlToClipboard(shortUrl);
+          } else {
             copyUrlToClipboard(longShareUrl);
-          });
-      } else {
-        copyUrlToClipboard(longShareUrl);
-      }
+          }
+        })
+        .catch((err) => {
+          console.warn("Failed to create short share link, copying long link", err);
+          copyUrlToClipboard(longShareUrl);
+        });
     } catch (e) {
       console.error("Failed to generate share URL", e);
       showToast("共有リンクの生成に失敗しました");

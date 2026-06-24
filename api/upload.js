@@ -1,5 +1,10 @@
-import { kv } from '@vercel/kv';
 import crypto from 'crypto';
+import { getRedis, storeSet } from './_store.js';
+
+const newId = () =>
+  typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,17 +12,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { image } = req.body;
+    const { image } = req.body || {};
     if (!image) {
       return res.status(400).json({ error: 'Missing image data' });
     }
 
     let id;
-    if (process.env.KV_REST_API_URL) {
-      id = typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      await kv.set(`vibrant-bohr-image:${id}`, image);
+    if (getRedis()) {
+      id = newId();
+      await storeSet(`vibrant-bohr-image:${id}`, image);
     } else {
       // Fallback: upload to paste.rs
       const response = await fetch('https://paste.rs/', {

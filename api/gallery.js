@@ -1,21 +1,21 @@
-import { kv } from '@vercel/kv';
+import { getRedis, storeGet, storeSet } from './_store.js';
 
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
-      const gallery = process.env.KV_REST_API_URL
-        ? (await kv.get('vibrant-bohr-gallery') || [])
+      const gallery = getRedis()
+        ? ((await storeGet('vibrant-bohr-gallery')) || [])
         : [];
       return res.status(200).json(gallery);
     } else if (req.method === 'POST') {
       const gallery = req.body;
-      if (process.env.KV_REST_API_URL) {
-        await kv.set('vibrant-bohr-gallery', gallery);
+      if (getRedis()) {
+        await storeSet('vibrant-bohr-gallery', gallery);
       }
       return res.status(200).json({ success: true });
     }
   } catch (error) {
-    console.error("Vercel KV Error:", error);
+    console.error("Gallery Store Error:", error);
     return res.status(500).json({ error: error.message });
   }
   res.status(405).send('Method Not Allowed');

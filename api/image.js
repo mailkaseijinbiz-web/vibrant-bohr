@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { getRedis, storeGet } from './_store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     }
 
     let base64;
-    if (process.env.KV_REST_API_URL) {
-      base64 = await kv.get(`vibrant-bohr-image:${id}`);
+    if (getRedis()) {
+      base64 = await storeGet(`vibrant-bohr-image:${id}`);
     } else {
       // Fallback: fetch from paste.rs
       const response = await fetch(`https://paste.rs/${id}`);
