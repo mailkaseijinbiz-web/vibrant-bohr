@@ -7,3 +7,26 @@ html, body, #root {
   padding: 0;
   background-color: #f3f4f6; /* Tailwind gray-100 */
 }
+
+/*
+ * Google's css2 API only ships the @font-face for Material Symbols, not the
+ * helper class. Without it, `material-symbols-outlined` spans render the raw
+ * ligature text (e.g. the word "delete") instead of an icon. Font size is left
+ * to the per-element `text-[Npx]` utilities.
+ */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
