@@ -110,8 +110,15 @@ function App() {
 
   const savePresets = async (newPresets: LayoutPreset[]) => {
     setLayoutPresets(newPresets);
+    // Persist to localStorage and the server independently: a localStorage
+    // quota error (e.g. multiple presets holding inline base64 images) must not
+    // prevent the server-side save.
     try {
       localStorage.setItem('vibrant-bohr-presets', JSON.stringify(newPresets));
+    } catch (e) {
+      console.warn("Failed to cache presets in localStorage", e);
+    }
+    try {
       await fetch('/api/presets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,6 +133,10 @@ function App() {
     setTemplateGallery(newGallery);
     try {
       localStorage.setItem('vibrant-bohr-gallery', JSON.stringify(newGallery));
+    } catch (e) {
+      console.warn("Failed to cache gallery in localStorage", e);
+    }
+    try {
       await fetch('/api/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
